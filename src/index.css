@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark,
+  html.dark {
+    color-scheme: dark;
+    background-color: #000000;
+    color: #f8fafc;
+  }
+}
+
+/* ==========================================================================
+   PURE BLACK CARDS SYSTEM FOR DARK MODE
+   All cards, modals, headers, list rows & sub-cards are 100% pure black (#000000)
+   ========================================================================== */
+
+/* Main Cards & Surfaces */
+html.dark .bg-white:not([data-keep-white="true"]),
+html.dark [class*="dark:bg-slate-800"],
+html.dark [class*="dark:bg-slate-900"],
+html.dark [class*="dark:bg-slate-950"],
+html.dark [class*="dark:bg-neutral-900"],
+html.dark [class*="dark:bg-neutral-950"],
+html.dark [class*="dark:bg-zinc-900"],
+html.dark [class*="dark:bg-zinc-950"],
+html.dark [class*="dark:bg-gray-800"],
+html.dark [class*="dark:bg-gray-900"] {
+  background-color: #000000 !important;
+}
+
+/* Sub-cards, inner sections & detail items in Dark Mode */
+html.dark .bg-slate-50:not([data-keep-light="true"]),
+html.dark .bg-slate-100:not([data-keep-light="true"]),
+html.dark [class*="dark:bg-slate-700/40"],
+html.dark [class*="dark:bg-slate-700/60"],
+html.dark [class*="dark:bg-slate-700/70"],
+html.dark [class*="dark:bg-slate-700"] {
+  background-color: #000000 !important;
+}
+
+/* Card Borders in Dark Mode: Crisp, elegant outline contrast */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-300,
+html.dark .border-slate-600,
+html.dark .border-slate-700,
+html.dark .border-slate-700\/70,
+html.dark .border-slate-700\/80,
+html.dark .border-slate-800,
+html.dark .border-neutral-800,
+html.dark .border-emerald-100\/90,
+html.dark .border-rose-100\/90,
+html.dark .border-amber-100\/90,
+html.dark .border-indigo-100\/90,
+html.dark .border-blue-100,
+html.dark .border-blue-200\/80 {
+  border-color: #222222 !important;
+}
+
+/* Card Text Readability in Dark Mode */
+html.dark .text-slate-800,
+html.dark .text-slate-900,
+html.dark .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-600 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Hover highlights for black cards in dark mode */
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-50:hover,
+html.dark [class*="dark:hover:bg-slate-700"]:hover {
+  background-color: #121212 !important;
+}
+
+/* Form Inputs, Selects & Textareas in Dark Mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #080808 !important;
+  color: #f8fafc !important;
+  border-color: #262626 !important;
+}
+

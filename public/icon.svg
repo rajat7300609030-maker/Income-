@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1d4ed8" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <!-- Inner subtle ambient glow -->
+  <circle cx="256" cy="180" r="180" fill="#60a5fa" opacity="0.18" />
+
+  <!-- Main Wallet Body -->
+  <g filter="url(#shadow)">
+    <!-- Back flap -->
+    <rect x="100" y="150" width="312" height="230" rx="36" fill="#1e3a8a" />
+    <!-- Front Wallet Card -->
+    <rect x="96" y="176" width="320" height="210" rx="32" fill="#ffffff" />
+    <rect x="96" y="176" width="320" height="210" rx="32" fill="url(#accent)" opacity="0.12" />
+
+    <!-- Card accent stripe -->
+    <rect x="96" y="220" width="320" height="42" fill="#2563eb" opacity="0.9" />
+
+    <!-- Wallet Clasp -->
+    <rect x="300" y="240" width="116" height="76" rx="20" fill="#1e40af" />
+    <!-- Golden Snap Button -->
+    <circle cx="360" cy="278" r="16" fill="url(#gold)" />
+    <circle cx="360" cy="278" r="8" fill="#ffffff" opacity="0.6" />
+  </g>
+
+  <!-- Floating Indian Rupee Badge -->
+  <g filter="url(#shadow)">
+    <circle cx="170" cy="340" r="54" fill="#10b981" stroke="#ffffff" stroke-width="6" />
+    <!-- ₹ Symbol -->
+    <text x="170" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="52" fill="#ffffff" text-anchor="middle">₹</text>
+  </g>
+
+  <!-- Upward Trend Indicator Arrow -->
+  <g filter="url(#shadow)">
+    <circle cx="356" cy="144" r="42" fill="#0284c7" stroke="#ffffff" stroke-width="5" />
+    <path d="M340 156 L356 132 L372 156 M356 136 L356 160" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

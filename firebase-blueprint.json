@@ -1,0 +1,179 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile and financial preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "businessName": { "type": "string", "maxLength": 150 },
+        "currencySymbol": { "type": "string", "maxLength": 5 },
+        "biometricEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "name", "email"]
+    },
+    "person": {
+      "title": "Person",
+      "description": "Customer, employee or partner ledger account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "mobile": { "type": "string", "maxLength": 30 },
+        "address": { "type": "string", "maxLength": 300 },
+        "openingBalance": { "type": "number" },
+        "type": { "type": "string", "enum": ["Customer", "Employee", "Other"] },
+        "salaryType": { "type": "string", "enum": ["None", "Daily", "Weekly", "Monthly"] },
+        "salaryAmount": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "name", "type"]
+    },
+    "income": {
+      "title": "Income",
+      "description": "Income inflow financial entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "personId": { "type": "string", "maxLength": 128 },
+        "personName": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 20 },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Bank", "Other"] },
+        "description": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "amount", "date", "paymentMethod"]
+    },
+    "expense": {
+      "title": "Expense",
+      "description": "Expense outflow financial entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "personId": { "type": "string", "maxLength": 128 },
+        "personName": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 20 },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Bank", "Other"] },
+        "description": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "amount", "date", "category", "paymentMethod"]
+    },
+    "payment": {
+      "title": "Payment",
+      "description": "Payment transaction received or paid",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "personId": { "type": "string", "maxLength": 128 },
+        "personName": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 20 },
+        "type": { "type": "string", "enum": ["Received", "Paid"] },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Bank", "Other"] },
+        "referenceNumber": { "type": "string", "maxLength": 100 },
+        "note": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "personId", "amount", "date", "type", "paymentMethod"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Unified financial ledger transaction item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["Income", "Expense", "Payment"] },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 20 },
+        "time": { "type": "string", "maxLength": 10 },
+        "personId": { "type": "string", "maxLength": 128 },
+        "personName": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 100 },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "UPI", "Bank", "Other"] },
+        "paymentDirection": { "type": "string", "enum": ["Received", "Paid"] },
+        "referenceNumber": { "type": "string", "maxLength": 100 },
+        "note": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "type", "amount", "date", "paymentMethod"]
+    },
+    "recycle_bin_item": {
+      "title": "RecycleBinItem",
+      "description": "Deleted financial record stored for 15 days before auto-purge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "originalId": { "type": "string", "maxLength": 128 },
+        "itemType": { "type": "string", "enum": ["person", "income", "expense", "payment"] },
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 500 },
+        "amount": { "type": "number" },
+        "deletedAt": { "type": "string", "maxLength": 50 },
+        "expiresAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "userId", "originalId", "itemType", "title", "deletedAt", "expiresAt"]
+    },
+    "test_connection": {
+      "title": "TestConnection",
+      "description": "Ping document for database connectivity checks",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "maxLength": 50 }
+      }
+    }
+  },
+  "firestore": {
+    "/test/{testId}": {
+      "schema": "test_connection",
+      "description": "Connectivity test ping path"
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profile documents"
+    },
+    "/persons/{personId}": {
+      "schema": "person",
+      "description": "Ledger contact persons"
+    },
+    "/income/{incomeId}": {
+      "schema": "income",
+      "description": "Income records collection"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "expense",
+      "description": "Expenses records collection"
+    },
+    "/payments/{paymentId}": {
+      "schema": "payment",
+      "description": "Payments records collection"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "transaction",
+      "description": "Unified transactions collection"
+    },
+    "/recycle_bin/{binId}": {
+      "schema": "recycle_bin_item",
+      "description": "15-day retention recycle bin documents"
+    }
+  }
+}
