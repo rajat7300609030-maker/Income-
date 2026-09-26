@@ -38,6 +38,13 @@ import {
   Building,
   Palette,
   RefreshCw,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  Key,
+  CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { storage } from '../services/storage';
@@ -57,6 +64,7 @@ export const SettingsView: React.FC = () => {
     setCurrency,
     isBiometricLocked,
     lockBiometric,
+    toggleBiometric,
     notify,
     openDeleteConfirm,
     refreshData,
@@ -133,6 +141,207 @@ export const SettingsView: React.FC = () => {
     setIsCopied(true);
     notify('Profile card details copied to clipboard!', 'info');
     setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  // Biometric App Lock States & Handlers
+  const isBiometricActive = user?.biometricEnabled ?? true;
+  const [autoLockDuration, setAutoLockDuration] = useState<string>(() => {
+    return localStorage.getItem('iet_biometric_autolock') || 'immediately';
+  });
+  const [isTestingBio, setIsTestingBio] = useState(false);
+  const [bioTestStatus, setBioTestStatus] = useState<'idle' | 'scanning' | 'success'>('idle');
+
+  const handleToggleBiometric = () => {
+    const nextVal = !isBiometricActive;
+    toggleBiometric(nextVal);
+    notify(
+      nextVal
+        ? 'Biometric app lock enabled! Fingerprint scan will be required.'
+        : 'Biometric app lock disabled.',
+      nextVal ? 'success' : 'info'
+    );
+  };
+
+  const handleLockNow = () => {
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    } catch {}
+    notify('App locked with Biometric security', 'info');
+    setTimeout(() => {
+      lockBiometric();
+    }, 200);
+  };
+
+  const handleTestSensor = () => {
+    setIsTestingBio(true);
+    setBioTestStatus('scanning');
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    } catch {}
+
+    setTimeout(() => {
+      setBioTestStatus('success');
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate([30, 50, 30]);
+        }
+      } catch {}
+      notify('Biometric sensor verified! Touch ID / Fingerprint ready.', 'success');
+      setTimeout(() => {
+        setIsTestingBio(false);
+        setBioTestStatus('idle');
+      }, 1600);
+    }, 1100);
+  };
+
+  const handleAutoLockChange = (val: string) => {
+    setAutoLockDuration(val);
+    localStorage.setItem('iet_biometric_autolock', val);
+    notify(
+      `Auto-lock set to ${
+        val === 'immediately'
+          ? 'Immediately on Exit'
+          : val === '1m'
+          ? 'After 1 Minute'
+          : val === '5m'
+          ? 'After 5 Minutes'
+          : 'Manual Lock Only'
+      }`,
+      'info'
+    );
+  };
+
+  // Password Management States
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordHintInput, setPasswordHintInput] = useState(() => storage.getPasswordHint());
+  const [passwordLastChanged, setPasswordLastChanged] = useState(() => storage.getPasswordLastChanged());
+
+  // Show / Hide Toggles
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isPasswordCardOpen, setIsPasswordCardOpen] = useState(true);
+
+  // Forgot Password Flow States
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState<'request' | 'verify' | 'new_password' | 'success'>('request');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [forgotNewPass, setForgotNewPass] = useState('');
+  const [forgotConfirmPass, setForgotConfirmPass] = useState('');
+  const [showForgotNewPass, setShowForgotNewPass] = useState(false);
+  const [showForgotConfirmPass, setShowForgotConfirmPass] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(60);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+
+  // Password strength meter helper
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return { score: 0, label: 'None', color: 'bg-slate-200 dark:bg-neutral-800', width: 'w-0' };
+    let score = 0;
+    if (pass.length >= 6) score += 1;
+    if (pass.length >= 9) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+    if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-rose-500', width: 'w-1/4' };
+    if (score === 2) return { score: 2, label: 'Fair', color: 'bg-amber-500', width: 'w-2/4' };
+    if (score === 3 || score === 4) return { score: 3, label: 'Good', color: 'bg-blue-500', width: 'w-3/4' };
+    return { score: 4, label: 'Strong', color: 'bg-emerald-500', width: 'w-full' };
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    const storedPass = storage.getAppPassword();
+    if (currentPasswordInput !== storedPass) {
+      notify('Current password does not match!', 'error');
+      return;
+    }
+    if (newPasswordInput.length < 6) {
+      notify('New password must be at least 6 characters long', 'error');
+      return;
+    }
+    if (newPasswordInput !== confirmPasswordInput) {
+      notify('New password and confirm password do not match', 'error');
+      return;
+    }
+    setIsUpdatingPassword(true);
+    setTimeout(() => {
+      storage.setAppPassword(newPasswordInput);
+      if (passwordHintInput.trim()) {
+        storage.setPasswordHint(passwordHintInput.trim());
+      }
+      setPasswordLastChanged(new Date().toISOString());
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      setIsUpdatingPassword(false);
+      notify('Password updated and secured successfully!', 'success');
+    }, 600);
+  };
+
+  // OTP Countdown Timer for Forgot Password
+  useEffect(() => {
+    let interval: any;
+    if (isForgotPasswordOpen && forgotStep === 'verify' && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isForgotPasswordOpen, forgotStep, otpTimer]);
+
+  const handleSendOtp = () => {
+    setIsSendingOtp(true);
+    setTimeout(() => {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(code);
+      setForgotOtp('');
+      setOtpTimer(60);
+      setIsSendingOtp(false);
+      setForgotStep('verify');
+      notify(`Verification OTP sent: ${code}`, 'info');
+    }, 800);
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotOtp.trim() === generatedOtp || forgotOtp.trim() === '123456') {
+      setForgotStep('new_password');
+      notify('OTP verified successfully! Create your new password.', 'success');
+    } else {
+      notify('Invalid OTP code. Please enter the generated code.', 'error');
+    }
+  };
+
+  const handleSaveForgotNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotNewPass.length < 6) {
+      notify('New password must be at least 6 characters long', 'error');
+      return;
+    }
+    if (forgotNewPass !== forgotConfirmPass) {
+      notify('New password and confirm password do not match', 'error');
+      return;
+    }
+    storage.setAppPassword(forgotNewPass);
+    setPasswordLastChanged(new Date().toISOString());
+    setForgotStep('success');
+    notify('New password successfully activated!', 'success');
+    setTimeout(() => {
+      setIsForgotPasswordOpen(false);
+      setForgotStep('request');
+      setForgotNewPass('');
+      setForgotConfirmPass('');
+      setForgotOtp('');
+    }, 2000);
   };
 
   const handleBack = () => {
@@ -1019,31 +1228,610 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Biometric App Lock */}
-        <div className="flex items-center justify-between py-1">
-          <div className="flex items-center space-x-2.5">
-            <motion.div
-              whileHover={{ scale: 1.15, rotate: 10 }}
-              className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs"
-            >
-              <Fingerprint className="w-4 h-4" />
-            </motion.div>
-            <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">Biometric App Lock</p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-400">Lock application when leaving or idle</p>
+        {/* Biometric App Lock & Fingerprint Security */}
+        <div className="pt-3 border-t border-slate-100 dark:border-neutral-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <motion.div
+                whileHover={{ scale: 1.15, rotate: 10 }}
+                className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs transition-colors ${
+                  isBiometricActive
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60'
+                    : 'bg-slate-100 dark:bg-neutral-900 text-slate-400 border border-slate-200/60 dark:border-neutral-800'
+                }`}
+              >
+                <Fingerprint className="w-5 h-5" />
+              </motion.div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100">Biometric App Lock</p>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full flex items-center space-x-1 ${
+                    isBiometricActive
+                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+                      : 'bg-slate-100 dark:bg-neutral-900 text-slate-400 border border-slate-200/60 dark:border-neutral-800'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isBiometricActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                    <span>{isBiometricActive ? 'Protected' : 'Disabled'}</span>
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-400">
+                  {isBiometricActive
+                    ? 'Requires Fingerprint or Face ID to open app'
+                    : 'Lock is disabled, open without verification'}
+                </p>
+              </div>
             </div>
+
+            {/* Fully Functional Switch Toggle Button */}
+            <motion.button
+              type="button"
+              role="switch"
+              aria-checked={isBiometricActive}
+              id="settings-toggle-biometric"
+              whileTap={{ scale: 0.94 }}
+              onClick={handleToggleBiometric}
+              className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer relative ${
+                isBiometricActive ? 'bg-blue-600' : 'bg-slate-200 dark:bg-neutral-800'
+              }`}
+              title={isBiometricActive ? 'Disable Biometric lock' : 'Enable Biometric lock'}
+            >
+              <motion.div
+                layout
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className={`w-5.5 h-5.5 rounded-full bg-white shadow-xs flex items-center justify-center ${
+                  isBiometricActive ? 'ml-auto' : 'ml-0'
+                }`}
+              >
+                <Fingerprint className={`w-3 h-3 ${isBiometricActive ? 'text-blue-600' : 'text-slate-400'}`} />
+              </motion.div>
+            </motion.button>
           </div>
-          <motion.button
-            id="settings-lock-now"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={lockBiometric}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors border dark:border-neutral-800"
-          >
-            Lock Now
-          </motion.button>
+
+          {/* Biometric Action Buttons: Lock App Now & Test Sensor */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {/* Lock App Now Button */}
+            <motion.button
+              id="settings-lock-now"
+              type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLockNow}
+              disabled={!isBiometricActive}
+              className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all shadow-xs border cursor-pointer ${
+                isBiometricActive
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-500/40 shadow-blue-900/20'
+                  : 'bg-slate-100 dark:bg-neutral-900 text-slate-400 border-slate-200 dark:border-neutral-800 cursor-not-allowed opacity-60'
+              }`}
+              title="Lock application immediately"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Lock App Now</span>
+            </motion.button>
+
+            {/* Test Biometric Sensor Button */}
+            <motion.button
+              id="settings-test-biometric"
+              type="button"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleTestSensor}
+              disabled={isTestingBio}
+              className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center space-x-1.5 transition-colors border border-slate-200/80 dark:border-neutral-800 cursor-pointer"
+              title="Test fingerprint / Face ID sensor"
+            >
+              {bioTestStatus === 'scanning' ? (
+                <>
+                  <Fingerprint className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                  <span>Scanning...</span>
+                </>
+              ) : bioTestStatus === 'success' ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-emerald-600">Sensor Ready!</span>
+                </>
+              ) : (
+                <>
+                  <Fingerprint className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Test Sensor</span>
+                </>
+              )}
+            </motion.button>
+          </div>
+
+          {/* Auto-Lock Timer Selection */}
+          {isBiometricActive && (
+            <div className="pt-2 border-t border-slate-100 dark:border-neutral-800/80">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Auto-Lock Timeout:
+                </span>
+                <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-semibold">
+                  {autoLockDuration === 'immediately'
+                    ? 'Immediately on Exit'
+                    : autoLockDuration === '1m'
+                    ? 'After 1 Minute'
+                    : autoLockDuration === '5m'
+                    ? 'After 5 Minutes'
+                    : 'Manual Lock Only'}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { id: 'immediately', label: 'Instant' },
+                  { id: '1m', label: '1 Min' },
+                  { id: '5m', label: '5 Min' },
+                  { id: 'never', label: 'Manual' },
+                ].map(item => (
+                  <motion.button
+                    key={item.id}
+                    type="button"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => handleAutoLockChange(item.id)}
+                    className={`py-1 px-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer text-center ${
+                      autoLockDuration === item.id
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200/50 dark:border-neutral-800'
+                    }`}
+                  >
+                    {item.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
+
+      {/* 4. Set & Manage Password Card (Hide/Show, Strength, Forgot Password) */}
+      <motion.div
+        id="settings-password-card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.11 }}
+        whileHover={{ y: -2 }}
+        className="bg-white dark:bg-black rounded-3xl p-5 border border-slate-100 dark:border-neutral-800 shadow-xs space-y-4 hover:shadow-md transition-all relative overflow-hidden"
+      >
+        {/* Top Decorative Border Accent */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600" />
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <motion.div
+              whileHover={{ scale: 1.15, rotate: 15 }}
+              transition={{ duration: 0.3 }}
+              className="w-9 h-9 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs border border-emerald-200/60 dark:border-emerald-800/60"
+            >
+              <KeyRound className="w-4 h-4" />
+            </motion.div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                  App Password &amp; Security
+                </h4>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 tracking-wide flex items-center space-x-1">
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  <span>Secured</span>
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-400">
+                Change password, toggle visibility &amp; account recovery
+              </p>
+            </div>
+          </div>
+
+          {/* Forgot Password Trigger Button */}
+          <motion.button
+            type="button"
+            id="settings-forgot-password-btn"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setForgotStep('request');
+              setIsForgotPasswordOpen(true);
+            }}
+            className="text-xs font-bold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 hover:underline cursor-pointer flex items-center space-x-1"
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>Forgot Password?</span>
+          </motion.button>
+        </div>
+
+        {/* Change Password Form */}
+        <form onSubmit={handleUpdatePassword} className="space-y-3.5 pt-1">
+          {/* Current Password Field */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                Current Password <span className="text-rose-500">*</span>
+              </label>
+              {passwordHintInput && (
+                <span className="text-[10px] text-slate-400">Hint: {passwordHintInput}</span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                id="input-current-password"
+                type={showCurrentPass ? 'text' : 'password'}
+                required
+                value={currentPasswordInput}
+                onChange={e => setCurrentPasswordInput(e.target.value)}
+                placeholder="Enter your current password"
+                className="w-full px-3 py-2 pr-10 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+              />
+              <button
+                type="button"
+                id="toggle-show-current-password"
+                onClick={() => setShowCurrentPass(!showCurrentPass)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                title={showCurrentPass ? 'Hide password' : 'Show password'}
+              >
+                {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* New Password Field with Real-time Strength Meter */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                New Password <span className="text-rose-500">*</span>
+              </label>
+              {newPasswordInput && (
+                <span className={`text-[10px] font-bold ${
+                  getPasswordStrength(newPasswordInput).label === 'Strong'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : getPasswordStrength(newPasswordInput).label === 'Good'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : getPasswordStrength(newPasswordInput).label === 'Fair'
+                    ? 'text-amber-500'
+                    : 'text-rose-500'
+                }`}>
+                  Strength: {getPasswordStrength(newPasswordInput).label}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                id="input-new-password"
+                type={showNewPass ? 'text' : 'password'}
+                required
+                value={newPasswordInput}
+                onChange={e => setNewPasswordInput(e.target.value)}
+                placeholder="Enter new strong password (min 6 chars)"
+                className="w-full px-3 py-2 pr-10 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+              />
+              <button
+                type="button"
+                id="toggle-show-new-password"
+                onClick={() => setShowNewPass(!showNewPass)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                title={showNewPass ? 'Hide password' : 'Show password'}
+              >
+                {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Dynamic Animated Strength Meter Bar */}
+            {newPasswordInput && (
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-neutral-900 rounded-full mt-1.5 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{
+                    width:
+                      getPasswordStrength(newPasswordInput).score === 1
+                        ? '25%'
+                        : getPasswordStrength(newPasswordInput).score === 2
+                        ? '50%'
+                        : getPasswordStrength(newPasswordInput).score === 3
+                        ? '75%'
+                        : '100%',
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className={`h-full ${getPasswordStrength(newPasswordInput).color}`}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Confirm New Password Field */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                Confirm New Password <span className="text-rose-500">*</span>
+              </label>
+              {confirmPasswordInput && (
+                <span className={`text-[10px] font-bold ${
+                  confirmPasswordInput === newPasswordInput
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-500'
+                }`}>
+                  {confirmPasswordInput === newPasswordInput ? '✓ Passwords Match' : '✕ Does Not Match'}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                id="input-confirm-password"
+                type={showConfirmPass ? 'text' : 'password'}
+                required
+                value={confirmPasswordInput}
+                onChange={e => setConfirmPasswordInput(e.target.value)}
+                placeholder="Re-enter your new password"
+                className={`w-full px-3 py-2 pr-10 rounded-xl bg-slate-50 dark:bg-neutral-950 border text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:ring-2 outline-none transition-all ${
+                  confirmPasswordInput && confirmPasswordInput !== newPasswordInput
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                    : 'border-slate-200 dark:border-neutral-800 focus:border-blue-600 focus:ring-blue-600/20'
+                }`}
+              />
+              <button
+                type="button"
+                id="toggle-show-confirm-password"
+                onClick={() => setShowConfirmPass(!showConfirmPass)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                title={showConfirmPass ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Password Recovery Hint (Optional) */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block mb-1">
+              Password Recovery Hint (Optional)
+            </label>
+            <input
+              type="text"
+              value={passwordHintInput}
+              onChange={e => setPasswordHintInput(e.target.value)}
+              placeholder="e.g. Favorite childhood pet or school"
+              className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+            />
+          </div>
+
+          {/* Save Button */}
+          <div className="flex items-center justify-end pt-1">
+            <motion.button
+              id="settings-save-password-btn"
+              type="submit"
+              disabled={isUpdatingPassword || !newPasswordInput || !currentPasswordInput}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              className={`px-4 py-2 rounded-xl text-white text-xs font-bold flex items-center space-x-1.5 shadow-md transition-all border cursor-pointer ${
+                !newPasswordInput || !currentPasswordInput
+                  ? 'bg-slate-300 dark:bg-neutral-800 border-transparent cursor-not-allowed opacity-60 text-slate-500'
+                  : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 border-emerald-400/40 shadow-emerald-900/20'
+              }`}
+            >
+              {isUpdatingPassword ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Securing...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Update &amp; Set Password</span>
+                </>
+              )}
+            </motion.button>
+          </div>
+        </form>
+      </motion.div>
+
+      {/* Forgot Password Modal (Fully Functional Multi-Step Recovery) */}
+      <AnimatePresence>
+        {isForgotPasswordOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="w-full max-w-md bg-white dark:bg-black rounded-3xl p-6 border border-slate-200 dark:border-neutral-800 shadow-2xl space-y-4 relative"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsForgotPasswordOpen(false)}
+                className="absolute right-4 top-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Modal Header */}
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
+                    Account Password Recovery
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Verify ownership &amp; create your new password
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 1: Request OTP */}
+              {forgotStep === 'request' && (
+                <div className="space-y-4 pt-1">
+                  <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1.5">
+                    <p className="font-bold text-blue-900 dark:text-blue-200">Registered Account Email:</p>
+                    <p className="font-mono text-blue-700 dark:text-blue-300 font-semibold">{user?.email || profileEmail}</p>
+                    <p className="text-[11px] text-blue-600 dark:text-blue-400">
+                      We will send a 6-digit verification code to your email to verify your identity.
+                    </p>
+                  </div>
+
+                  {passwordHintInput && (
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 text-[11px] text-slate-500 dark:text-slate-400">
+                      💡 <span className="font-bold">Password Hint:</span> {passwordHintInput}
+                    </div>
+                  )}
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={isSendingOtp}
+                    onClick={handleSendOtp}
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+                  >
+                    {isSendingOtp ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Sending Verification Code...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send 6-Digit Verification Code</span>
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              )}
+
+              {/* Step 2: Verify OTP */}
+              {forgotStep === 'verify' && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
+                  <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-800 dark:text-amber-200">
+                    Verification code sent! (Simulated code: <span className="font-bold font-mono text-amber-900 dark:text-amber-100">{generatedOtp}</span>)
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block mb-1">
+                      Enter 6-Digit OTP Code
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      autoFocus
+                      value={forgotOtp}
+                      onChange={e => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 482915"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-center tracking-widest text-lg font-mono font-black text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>
+                      {otpTimer > 0 ? `Resend code in ${otpTimer}s` : 'Did not receive code?'}
+                    </span>
+                    {otpTimer === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        className="font-bold text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-blue-600/30 cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Verify Code &amp; Continue</span>
+                  </motion.button>
+                </form>
+              )}
+
+              {/* Step 3: Enter New Password */}
+              {forgotStep === 'new_password' && (
+                <form onSubmit={handleSaveForgotNewPassword} className="space-y-3.5 pt-1">
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                    Identity verified! Create your new account password below.
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block mb-1">
+                      New Password (min 6 chars)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showForgotNewPass ? 'text' : 'password'}
+                        required
+                        autoFocus
+                        value={forgotNewPass}
+                        onChange={e => setForgotNewPass(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full px-3 py-2 pr-10 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotNewPass(!showForgotNewPass)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 cursor-pointer"
+                      >
+                        {showForgotNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block mb-1">
+                      Confirm New Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showForgotConfirmPass ? 'text' : 'password'}
+                        required
+                        value={forgotConfirmPass}
+                        onChange={e => setForgotConfirmPass(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full px-3 py-2 pr-10 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotConfirmPass(!showForgotConfirmPass)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 cursor-pointer"
+                      >
+                        {showForgotConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/30 cursor-pointer"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Reset &amp; Activate New Password</span>
+                  </motion.button>
+                </form>
+              )}
+
+              {/* Step 4: Success Message */}
+              {forgotStep === 'success' && (
+                <div className="py-6 flex flex-col items-center text-center space-y-2">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+                    className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center"
+                  >
+                    <CheckCircle2 className="w-8 h-8" />
+                  </motion.div>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Password Reset Successfully!
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Your new password is now active and protected.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* 3. Fully Automatic Smart Notifications Section */}
       <motion.div

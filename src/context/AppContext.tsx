@@ -1114,12 +1114,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleBiometric = (enabled: boolean) => {
-    if (user) {
-      const updated = { ...user, biometricEnabled: enabled };
-      setUser(updated);
-      LocalStorageManager.setUser(updated);
-      showToast(`Biometric lock ${enabled ? 'enabled' : 'disabled'}`);
+    const existing = user || LocalStorageManager.getUser() || INITIAL_USER;
+    const updated: UserProfile = { ...existing, biometricEnabled: enabled };
+    setUser(updated);
+    LocalStorageManager.setUser(updated);
+    if (!enabled) {
+      setIsBiometricLocked(false);
+      LocalStorageManager.setBiometricLocked(false);
     }
+    showToast(`Biometric lock ${enabled ? 'enabled' : 'disabled'}`);
   };
 
   const [currency, setCurrency] = useState<string>('INR');

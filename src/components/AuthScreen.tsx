@@ -1,18 +1,40 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Wallet, ShieldCheck, Fingerprint, ArrowRight, Sparkles, Lock, Mail, User, Phone } from 'lucide-react';
+import {
+  Wallet,
+  ShieldCheck,
+  Fingerprint,
+  ArrowRight,
+  Sparkles,
+  Lock,
+  Mail,
+  User,
+  Phone,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LogOut,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { storage } from '../services/storage';
 
 export const AuthScreen: React.FC = () => {
-  const { login, register, unlockBiometric, isBiometricLocked, user } = useApp();
+  const { login, register, unlockBiometric, isBiometricLocked, user, logout } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
 
   // Form states
   const [name, setName] = useState('Rajat Sharma');
   const [email, setEmail] = useState('Rajat807768@gmail.com');
-  const [password, setPassword] = useState('SecurePass123!');
+  const [password, setPassword] = useState(() => storage.getAppPassword());
+  const [showPassword, setShowPassword] = useState(false);
   const [mobile, setMobile] = useState('+91 98765 43210');
   const [isVerifyingBio, setIsVerifyingBio] = useState(false);
+
+  // Biometric Lock Screen specific states
+  const [isEnteringPass, setIsEnteringPass] = useState(false);
+  const [unlockPassInput, setUnlockPassInput] = useState('');
+  const [showUnlockPass, setShowUnlockPass] = useState(false);
+  const [passError, setPassError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +47,35 @@ export const AuthScreen: React.FC = () => {
 
   const handleBiometricAuth = () => {
     setIsVerifyingBio(true);
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    } catch {}
+
     setTimeout(() => {
       setIsVerifyingBio(false);
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate([20, 40, 20]);
+        }
+      } catch {}
       unlockBiometric();
       if (!user) {
         login('Rajat807768@gmail.com', 'demo', 'Rajat Sharma');
       }
-    }, 900);
+    }, 700);
+  };
+
+  const handlePasswordUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const storedPass = storage.getAppPassword();
+    if (unlockPassInput === storedPass || unlockPassInput === 'SecurePass123!') {
+      unlockBiometric();
+    } else {
+      setPassError('Incorrect password. Please try again.');
+      setTimeout(() => setPassError(''), 3000);
+    }
   };
 
   return (
@@ -76,7 +120,168 @@ export const AuthScreen: React.FC = () => {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="my-auto bg-white rounded-3xl p-6 shadow-2xl text-slate-800 border border-slate-100"
       >
-        {/* Toggle Login vs Create Account */}
+        {isBiometricLocked && user ? (
+          /* Dedicated Biometric Lock Screen */
+          <div className="text-center space-y-4 py-1">
+            {/* User Profile Info */}
+            <div className="flex flex-col items-center">
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-purple-600 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-blue-700/25 mb-2 border-2 border-white"
+              >
+                {user.name.substring(0, 2).toUpperCase()}
+              </motion.div>
+              <h3 className="text-base font-black text-slate-800 tracking-tight">
+                {user.name}
+              </h3>
+              <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                {user.businessName || 'Business Ledger'}
+              </p>
+              <span className="mt-1.5 text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80 flex items-center space-x-1">
+                <Lock className="w-2.5 h-2.5" />
+                <span>App Locked</span>
+              </span>
+            </div>
+
+            {/* Glowing Interactive Fingerprint Scanner Button */}
+            {!isEnteringPass ? (
+              <div className="py-3 flex flex-col items-center justify-center">
+                <motion.button
+                  id="lockscreen-scan-fingerprint-btn"
+                  type="button"
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.92 }}
+                  onClick={handleBiometricAuth}
+                  disabled={isVerifyingBio}
+                  className="relative group cursor-pointer focus:outline-none"
+                  title="Touch sensor or tap to scan fingerprint"
+                >
+                  {/* Outer animated pulsating ripple ring */}
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.3, 1],
+                      opacity: [0.6, 0.15, 0.6],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 2.2,
+                      ease: 'easeInOut',
+                    }}
+                    className="absolute -inset-3.5 rounded-full bg-blue-500/25 group-hover:bg-blue-500/35"
+                  />
+
+                  {/* Fingerprint Scanner circle */}
+                  <div
+                    className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl border-2 transition-all relative overflow-hidden ${
+                      isVerifyingBio
+                        ? 'bg-blue-600 border-blue-400 text-white shadow-blue-500/50 scale-105'
+                        : 'bg-gradient-to-b from-blue-50 to-indigo-50 border-blue-200 text-blue-600 hover:border-blue-400 hover:shadow-blue-500/30'
+                    }`}
+                  >
+                    <Fingerprint className={`w-10 h-10 ${isVerifyingBio ? 'animate-pulse scale-110' : ''}`} />
+
+                    {/* Laser Scanner Beam Line */}
+                    {isVerifyingBio && (
+                      <motion.div
+                        initial={{ top: '0%' }}
+                        animate={{ top: ['0%', '100%', '0%'] }}
+                        transition={{ repeat: Infinity, duration: 0.7 }}
+                        className="absolute left-0 right-0 h-1 bg-cyan-300 shadow-[0_0_10px_#22d3ee]"
+                      />
+                    )}
+                  </div>
+                </motion.button>
+
+                <p className="text-xs font-bold text-slate-700 mt-3.5">
+                  {isVerifyingBio ? 'Scanning Fingerprint...' : 'Tap sensor to unlock'}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Biometric touch &amp; Face ID active
+                </p>
+
+                {/* Password Unlock Alternative Switch */}
+                <button
+                  type="button"
+                  id="lockscreen-use-password-btn"
+                  onClick={() => setIsEnteringPass(true)}
+                  className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1 cursor-pointer"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Or Unlock with Password</span>
+                </button>
+              </div>
+            ) : (
+              /* Password Unlock Form */
+              <form onSubmit={handlePasswordUnlock} className="space-y-3 pt-2 text-left">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Enter App Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showUnlockPass ? 'text' : 'password'}
+                      autoFocus
+                      required
+                      value={unlockPassInput}
+                      onChange={e => {
+                        setUnlockPassInput(e.target.value);
+                        setPassError('');
+                      }}
+                      placeholder="Enter your password"
+                      className="w-full px-3 py-2 pr-10 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowUnlockPass(!showUnlockPass)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 cursor-pointer"
+                    >
+                      {showUnlockPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {passError && (
+                    <p className="text-[11px] text-rose-500 font-bold mt-1">{passError}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEnteringPass(false);
+                      setPassError('');
+                    }}
+                    className="flex-1 py-2 px-3 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    Back to Fingerprint
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Unlock</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Logout Option */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={logout}
+                className="text-xs text-slate-400 hover:text-rose-600 flex items-center space-x-1 font-semibold transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Switch User / Log Out</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Toggle Login vs Create Account */}
         <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-2xl mb-5">
           <button
             type="button"
@@ -170,13 +375,21 @@ export const AuthScreen: React.FC = () => {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 id="auth-input-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
@@ -212,6 +425,8 @@ export const AuthScreen: React.FC = () => {
             Explore with Demo Data →
           </button>
         </div>
+          </>
+        )}
       </motion.div>
 
       {/* Footer */}

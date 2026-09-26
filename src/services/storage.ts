@@ -24,6 +24,9 @@ const STORAGE_KEYS = {
   BIOMETRIC_LOCKED: 'iet_biometric_locked',
   HAS_BEEN_RESET: 'iet_has_been_reset',
   APP_INITIALIZED: 'iet_app_initialized',
+  APP_PASSWORD: 'iet_app_password',
+  PASSWORD_HINT: 'iet_password_hint',
+  PASSWORD_LAST_CHANGED: 'iet_password_last_changed',
 };
 
 
@@ -539,6 +542,27 @@ export class LocalStorageManager {
 
   static setBiometricLocked(locked: boolean): void {
     this.set(STORAGE_KEYS.BIOMETRIC_LOCKED, locked);
+  }
+
+  static getAppPassword(): string {
+    return this.get<string>(STORAGE_KEYS.APP_PASSWORD, 'SecurePass123!');
+  }
+
+  static setAppPassword(password: string): void {
+    this.set(STORAGE_KEYS.APP_PASSWORD, password);
+    this.set(STORAGE_KEYS.PASSWORD_LAST_CHANGED, new Date().toISOString());
+  }
+
+  static getPasswordHint(): string {
+    return this.get<string>(STORAGE_KEYS.PASSWORD_HINT, 'Default master password');
+  }
+
+  static setPasswordHint(hint: string): void {
+    this.set(STORAGE_KEYS.PASSWORD_HINT, hint);
+  }
+
+  static getPasswordLastChanged(): string {
+    return this.get<string>(STORAGE_KEYS.PASSWORD_LAST_CHANGED, new Date().toISOString());
   }
 
   static clearAllPermanently(): void {
