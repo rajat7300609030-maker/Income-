@@ -130,10 +130,10 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.88, y: 24 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/50 flex flex-col relative"
+          className="w-full max-w-sm bg-white dark:bg-black rounded-3xl shadow-2xl overflow-hidden border border-white/50 dark:border-neutral-800 flex flex-col relative"
         >
           {/* Top Progress Countdown Bar (5 Seconds Auto-close indicator) */}
-          <div className="w-full bg-slate-100 h-1.5 overflow-hidden relative">
+          <div className="w-full bg-slate-100 dark:bg-neutral-900 h-1.5 overflow-hidden relative">
             <motion.div
               initial={{ width: '100%' }}
               animate={{ width: '0%' }}
@@ -191,19 +191,19 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           <div className="p-5 space-y-3.5 max-h-[60vh] overflow-y-auto">
             {/* Person / Party Name */}
             {transaction.personName && (
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                       Party / Person
                     </p>
-                    <p className="text-xs font-bold text-slate-800">{transaction.personName}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.personName}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
                   Account Ledger
                 </span>
               </div>
@@ -211,16 +211,16 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
             {/* Category (for Expenses/Income) */}
             {transaction.category && (
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 flex items-center justify-center">
                     <Tag className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                       Category
                     </p>
-                    <p className="text-xs font-bold text-slate-800">{transaction.category}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.category}</p>
                   </div>
                 </div>
               </div>
@@ -228,35 +228,35 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
             {/* Date & Time Grid */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-1.5 text-slate-400 mb-1">
                   <Calendar className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-semibold uppercase tracking-wide">Date</span>
                 </div>
-                <p className="text-xs font-bold text-slate-800">{transaction.date}</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.date}</p>
               </div>
 
-              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-1.5 text-slate-400 mb-1">
                   <CreditCard className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-semibold uppercase tracking-wide">Method</span>
                 </div>
-                <p className="text-xs font-bold text-slate-800">{transaction.paymentMethod}</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.paymentMethod}</p>
               </div>
             </div>
 
             {/* Reference Number */}
             {transaction.referenceNumber && (
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center">
                     <Hash className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                       Ref / UTR Number
                     </p>
-                    <p className="text-xs font-mono font-bold text-slate-800">
+                    <p className="text-xs font-mono font-bold text-slate-800 dark:text-slate-100">
                       {transaction.referenceNumber}
                     </p>
                   </div>
@@ -265,11 +265,11 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => handleCopyRef(transaction.referenceNumber)}
-                  className="p-1.5 rounded-lg hover:bg-slate-200/70 text-slate-500 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-slate-200/70 dark:hover:bg-neutral-800 text-slate-500 dark:text-slate-400 transition-colors"
                   title="Copy reference number"
                 >
                   {copiedRef ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )}
@@ -279,14 +279,14 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
             {/* Note / Remarks */}
             {transaction.note && (
-              <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-1.5 text-slate-400 mb-1">
                   <FileText className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-semibold uppercase tracking-wide">
                     Note / Description
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed italic bg-white p-2 rounded-xl border border-slate-100">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic bg-white dark:bg-neutral-900 p-2 rounded-xl border border-slate-100 dark:border-neutral-800">
                   "{transaction.note}"
                 </p>
               </div>
@@ -295,7 +295,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             {/* System ID & Record status */}
             <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
               <span>ID: {transaction.id}</span>
-              <span className="inline-flex items-center space-x-1 text-emerald-600 font-semibold">
+              <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>Active Ledger Record</span>
               </span>
@@ -303,7 +303,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           </div>
 
           {/* Bottom Action Buttons */}
-          <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center space-x-2">
+          <div className="p-4 bg-slate-50/80 dark:bg-black border-t border-slate-100 dark:border-neutral-800 flex items-center space-x-2">
             {onEdit && (
               <motion.button
                 id="transaction-detail-edit-btn"
@@ -329,7 +329,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   onClose();
                   onDelete(transaction);
                 }}
-                className="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                className="py-2.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center justify-center space-x-1 transition-all cursor-pointer"
                 title="Delete this record"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -342,7 +342,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.96 }}
               onClick={onClose}
-              className={`py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors shadow-2xs cursor-pointer ${
+              className={`py-2.5 px-4 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors shadow-2xs cursor-pointer ${
                 !onEdit && !onDelete ? 'w-full' : ''
               }`}
             >

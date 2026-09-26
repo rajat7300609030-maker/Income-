@@ -22,6 +22,8 @@ const STORAGE_KEYS = {
   SYNC_QUEUE: 'iet_sync_queue',
   LAST_SYNC: 'iet_last_sync',
   BIOMETRIC_LOCKED: 'iet_biometric_locked',
+  HAS_BEEN_RESET: 'iet_has_been_reset',
+  APP_INITIALIZED: 'iet_app_initialized',
 };
 
 
@@ -405,8 +407,25 @@ export class LocalStorageManager {
     return result;
   }
 
+  static hasBeenReset(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.HAS_BEEN_RESET) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  static isInitialized(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.APP_INITIALIZED) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
   static getPersons(): Person[] {
-    const rawList = this.deduplicateById(this.get<Person[]>(STORAGE_KEYS.PERSONS, INITIAL_PERSONS));
+    const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_PERSONS;
+    const rawList = this.deduplicateById(this.get<Person[]>(STORAGE_KEYS.PERSONS, defaultData));
     // Auto-migrate legacy employees/staff/workers that might lack explicit salary configurations
     return rawList.map(p => {
       if (p.type === 'Employee' || p.type === 'Staff' || p.type === 'Worker') {
@@ -429,7 +448,8 @@ export class LocalStorageManager {
   }
 
   static getIncome(): IncomeRecord[] {
-    return this.deduplicateById(this.get<IncomeRecord[]>(STORAGE_KEYS.INCOME, INITIAL_INCOME));
+    const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_INCOME;
+    return this.deduplicateById(this.get<IncomeRecord[]>(STORAGE_KEYS.INCOME, defaultData));
   }
 
   static setIncome(incomes: IncomeRecord[]): void {
@@ -437,7 +457,8 @@ export class LocalStorageManager {
   }
 
   static getExpenses(): ExpenseRecord[] {
-    return this.deduplicateById(this.get<ExpenseRecord[]>(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES));
+    const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_EXPENSES;
+    return this.deduplicateById(this.get<ExpenseRecord[]>(STORAGE_KEYS.EXPENSES, defaultData));
   }
 
   static setExpenses(expenses: ExpenseRecord[]): void {
@@ -445,7 +466,8 @@ export class LocalStorageManager {
   }
 
   static getPayments(): PaymentRecord[] {
-    return this.deduplicateById(this.get<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS));
+    const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_PAYMENTS;
+    return this.deduplicateById(this.get<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, defaultData));
   }
 
   static setPayments(payments: PaymentRecord[]): void {
@@ -453,7 +475,8 @@ export class LocalStorageManager {
   }
 
   static getRecycleBin(): RecycleBinItem[] {
-    const raw = this.deduplicateById(this.get<RecycleBinItem[]>(STORAGE_KEYS.RECYCLE_BIN, INITIAL_RECYCLE_BIN));
+    const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_RECYCLE_BIN;
+    const raw = this.deduplicateById(this.get<RecycleBinItem[]>(STORAGE_KEYS.RECYCLE_BIN, defaultData));
     const now = Date.now();
     // Automatic 15-day purge: items where expire date is passed are purged permanently
     const active = raw.filter(item => {
@@ -471,7 +494,7 @@ export class LocalStorageManager {
   }
 
   static getNotifications(): AppNotification[] {
-    return this.get<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, [
+    const defaultData: AppNotification[] = (this.hasBeenReset() || this.isInitialized()) ? [] : [
       {
         id: 'notif_1',
         title: 'Payment Received',
@@ -493,7 +516,8 @@ export class LocalStorageManager {
         time: 'Yesterday',
         type: 'alert',
       },
-    ]);
+    ];
+    return this.get<AppNotification[]>(STORAGE_KEYS.NOTIFICATIONS, defaultData);
   }
 
   static setNotifications(notifs: AppNotification[]): void {
@@ -517,8 +541,27 @@ export class LocalStorageManager {
     this.set(STORAGE_KEYS.BIOMETRIC_LOCKED, locked);
   }
 
+  static clearAllPermanently(): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.HAS_BEEN_RESET, 'true');
+      localStorage.setItem(STORAGE_KEYS.APP_INITIALIZED, 'true');
+    } catch {}
+    this.set(STORAGE_KEYS.PERSONS, []);
+    this.set(STORAGE_KEYS.INCOME, []);
+    this.set(STORAGE_KEYS.EXPENSES, []);
+    this.set(STORAGE_KEYS.PAYMENTS, []);
+    this.set(STORAGE_KEYS.TRANSACTIONS, []);
+    this.set(STORAGE_KEYS.RECYCLE_BIN, []);
+    this.set(STORAGE_KEYS.NOTIFICATIONS, []);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.SYNC_QUEUE);
+      localStorage.removeItem(STORAGE_KEYS.PROFILE_DRAFT);
+      localStorage.removeItem(STORAGE_KEYS.LAST_SYNC);
+    } catch {}
+  }
+
   static clearAll(): void {
-    Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+    this.clearAllPermanently();
   }
 
   static exportBackupJSON(): string {

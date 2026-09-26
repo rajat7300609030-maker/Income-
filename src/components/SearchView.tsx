@@ -85,19 +85,19 @@ export const SearchView: React.FC = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="bg-white px-4 pt-3 pb-3 border-b border-slate-100 shrink-0 shadow-2xs"
+        className="bg-white dark:bg-black px-4 pt-3 pb-3 border-b border-slate-100 dark:border-neutral-800 shrink-0 shadow-2xs"
       >
         <div className="flex items-center space-x-2 mb-2">
           <motion.button
             whileHover={{ scale: 1.1, x: -2 }}
             whileTap={{ scale: 0.9 }}
             onClick={goBack}
-            className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
+            className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors"
             title="Go Back"
           >
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
-          <h2 className="text-base font-bold text-slate-800 tracking-tight">Global Search</h2>
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Global Search</h2>
         </div>
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -108,14 +108,14 @@ export const SearchView: React.FC = () => {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search persons, incomes, expenses, payments..."
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
           />
           {query && (
             <motion.button
               whileHover={{ scale: 1.2, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="w-4 h-4" />
             </motion.button>
@@ -147,7 +147,7 @@ export const SearchView: React.FC = () => {
           <>
             {/* Person Matches */}
             <div>
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
                 Persons ({matchedPersons.length})
               </h3>
 
@@ -166,7 +166,7 @@ export const SearchView: React.FC = () => {
                         whileHover={{ y: -2, scale: 1.01, x: 2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedPersonForProfile(person)}
-                        className="bg-white p-3 rounded-2xl border border-slate-100 shadow-xs flex items-center justify-between hover:border-blue-200 cursor-pointer transition-all"
+                        className="bg-white dark:bg-black p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs flex items-center justify-between hover:border-blue-200 dark:hover:border-neutral-700 cursor-pointer transition-all"
                       >
                         <div className="flex items-center space-x-3">
                           <motion.div
@@ -177,12 +177,12 @@ export const SearchView: React.FC = () => {
                             {person.name.substring(0, 2).toUpperCase()}
                           </motion.div>
                           <div>
-                            <p className="text-xs font-bold text-slate-800">{person.name}</p>
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{person.name}</p>
                             <div className="flex items-center space-x-1 text-[10px] text-slate-400">
                               <Phone className="w-3 h-3" />
                               <span>{person.mobile}</span>
                               <span>•</span>
-                              <span className="font-semibold text-slate-600">{person.type}</span>
+                              <span className="font-semibold text-slate-600 dark:text-slate-300">{person.type}</span>
                             </div>
                           </div>
                         </div>
@@ -196,13 +196,13 @@ export const SearchView: React.FC = () => {
                               e.stopPropagation();
                               startEditItem({ type: 'person', data: person });
                             }}
-                            className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 shadow-2xs transition-all"
+                            className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 shadow-2xs transition-all"
                             title={`Edit ${person.name}`}
                           >
-                            <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                            <Edit2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                           </motion.button>
                           <motion.div whileHover={{ x: 3 }}>
-                            <ChevronRight className="w-4 h-4 text-slate-300" />
+                            <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                           </motion.div>
                         </div>
                       </motion.div>
@@ -214,7 +214,7 @@ export const SearchView: React.FC = () => {
 
             {/* Transaction Matches */}
             <div>
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
                 Transactions ({matchedTransactions.length})
               </h3>
 
@@ -231,7 +231,7 @@ export const SearchView: React.FC = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ delay: Math.min(0.2, idx * 0.03), duration: 0.2 }}
                         whileHover={{ y: -2, scale: 1.01 }}
-                        className="bg-white p-3 rounded-2xl border border-slate-100 shadow-xs flex items-center justify-between hover:shadow-md transition-all"
+                        className="bg-white dark:bg-black p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs flex items-center justify-between hover:shadow-md transition-all"
                       >
                         <div className="flex items-center space-x-3">
                           <motion.div

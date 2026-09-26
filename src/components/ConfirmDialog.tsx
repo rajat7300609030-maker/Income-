@@ -19,22 +19,22 @@ export const ConfirmDialog: React.FC = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center"
+          className="w-full max-w-sm bg-white dark:bg-black rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-neutral-800 flex flex-col items-center text-center"
         >
           <motion.div
             initial={{ scale: 0, rotate: -30 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", damping: 12, stiffness: 200 }}
-            className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4 shadow-sm"
+            className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 shadow-sm"
           >
             <AlertTriangle className="w-6 h-6" />
           </motion.div>
 
-          <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-2">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight mb-2">
             {deleteConfirm.title}
           </h3>
 
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
             {deleteConfirm.message}
           </p>
 
@@ -45,7 +45,7 @@ export const ConfirmDialog: React.FC = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.96 }}
               onClick={closeDeleteConfirm}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all shadow-2xs"
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-neutral-900 transition-all shadow-2xs"
             >
               Cancel
             </motion.button>

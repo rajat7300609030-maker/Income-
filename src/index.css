@@ -20,48 +20,70 @@
    All cards, modals, headers, list rows & sub-cards are 100% pure black (#000000)
    ========================================================================== */
 
-/* Main Cards & Surfaces */
-html.dark .bg-white:not([data-keep-white="true"]),
+/* All Cards, Surfaces, Headers, Modals, Dialogs & Panels in Dark Mode */
+html.dark .bg-white,
+html.dark [class*="bg-white/"],
+html.dark [class*="bg-slate-50"],
+html.dark [class*="bg-slate-100"],
 html.dark [class*="dark:bg-slate-800"],
 html.dark [class*="dark:bg-slate-900"],
 html.dark [class*="dark:bg-slate-950"],
+html.dark [class*="dark:bg-neutral-800"],
 html.dark [class*="dark:bg-neutral-900"],
 html.dark [class*="dark:bg-neutral-950"],
+html.dark [class*="dark:bg-zinc-800"],
 html.dark [class*="dark:bg-zinc-900"],
 html.dark [class*="dark:bg-zinc-950"],
 html.dark [class*="dark:bg-gray-800"],
-html.dark [class*="dark:bg-gray-900"] {
+html.dark [class*="dark:bg-gray-900"],
+html.dark [class*="rounded-2xl"]:not([data-keep-color="true"]):not(button):not(input):not(select):not(textarea):not(a),
+html.dark [class*="rounded-3xl"]:not([data-keep-color="true"]):not(button):not(input):not(select):not(textarea):not(a),
+html.dark [class*="sm:rounded-3xl"]:not(button):not(input),
+html.dark [class*="rounded-t-3xl"]:not(button):not(input),
+html.dark #current-net-balance-card,
+html.dark #net-balance-bank-card,
+html.dark #net-balance-cash-card,
+html.dark #quick-actions-bar,
+html.dark #periodic-breakdown-card,
+html.dark #income-vs-expense-card,
+html.dark #recent-transactions-card,
+html.dark #card-total-income,
+html.dark #card-total-expenses,
+html.dark #card-total-payments,
+html.dark #card-pending-payments,
+html.dark [id*="card-"],
+html.dark [id*="-card"],
+html.dark [role="dialog"] > div,
+html.dark .modal-content,
+html.dark .fixed.inset-0 > div:not([data-keep-color="true"]) {
   background-color: #000000 !important;
+  background-image: none !important;
 }
 
-/* Sub-cards, inner sections & detail items in Dark Mode */
-html.dark .bg-slate-50:not([data-keep-light="true"]),
-html.dark .bg-slate-100:not([data-keep-light="true"]),
-html.dark [class*="dark:bg-slate-700/40"],
-html.dark [class*="dark:bg-slate-700/60"],
-html.dark [class*="dark:bg-slate-700/70"],
+/* Sub-cards, inner sections, date pickers, breakdown items & ledger rows in Dark Mode */
+html.dark #net-balance-bank-card,
+html.dark #net-balance-cash-card,
 html.dark [class*="dark:bg-slate-700"] {
   background-color: #000000 !important;
+  background-image: none !important;
 }
 
 /* Card Borders in Dark Mode: Crisp, elegant outline contrast */
-html.dark .border-slate-100,
-html.dark .border-slate-200,
-html.dark .border-slate-200\/80,
-html.dark .border-slate-200\/90,
-html.dark .border-slate-300,
-html.dark .border-slate-600,
-html.dark .border-slate-700,
-html.dark .border-slate-700\/70,
-html.dark .border-slate-700\/80,
-html.dark .border-slate-800,
-html.dark .border-neutral-800,
-html.dark .border-emerald-100\/90,
-html.dark .border-rose-100\/90,
-html.dark .border-amber-100\/90,
-html.dark .border-indigo-100\/90,
-html.dark .border-blue-100,
-html.dark .border-blue-200\/80 {
+html.dark [class*="border-slate-"],
+html.dark [class*="border-neutral-"],
+html.dark [class*="border-emerald-100"],
+html.dark [class*="border-rose-100"],
+html.dark [class*="border-blue-100"],
+html.dark [class*="border-amber-100"],
+html.dark [class*="border-indigo-100"],
+html.dark [class*="border-sky-100"],
+html.dark [class*="border-purple-100"],
+html.dark [class*="border-white/"],
+html.dark #current-net-balance-card,
+html.dark #net-balance-bank-card,
+html.dark #net-balance-cash-card,
+html.dark [class*="rounded-2xl"],
+html.dark [class*="rounded-3xl"] {
   border-color: #222222 !important;
 }
 
@@ -73,17 +95,22 @@ html.dark .text-slate-700 {
 }
 
 html.dark .text-slate-600 {
-  color: #e2e8f0 !important;
+  color: #cbd5e1 !important;
 }
 
-html.dark .text-slate-500,
-html.dark .text-slate-400 {
+html.dark .text-slate-500 {
   color: #94a3b8 !important;
 }
 
-/* Hover highlights for black cards in dark mode */
+html.dark .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Hover highlights for black cards in dark mode - never white */
 html.dark .hover\:bg-slate-100:hover,
 html.dark .hover\:bg-slate-50:hover,
+html.dark [class*="hover:bg-slate-50"]:hover,
+html.dark [class*="hover:bg-slate-100"]:hover,
 html.dark [class*="dark:hover:bg-slate-700"]:hover {
   background-color: #121212 !important;
 }

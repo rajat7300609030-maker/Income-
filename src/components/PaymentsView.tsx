@@ -60,7 +60,7 @@ export const PaymentsView: React.FC = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="bg-white px-4 pt-3 pb-3 border-b border-slate-100 shrink-0 shadow-2xs"
+        className="bg-white dark:bg-black px-4 pt-3 pb-3 border-b border-slate-100 dark:border-neutral-800 shrink-0 shadow-2xs"
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -68,13 +68,13 @@ export const PaymentsView: React.FC = () => {
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
               onClick={goBack}
-              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
+              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors"
               title="Go Back"
             >
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
             <div>
-              <h2 className="text-base font-bold text-slate-800 tracking-tight">Payments Ledger</h2>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Payments Ledger</h2>
               <p className="text-xs text-slate-400">Direct settlements, UPI & bank transfers</p>
             </div>
           </div>
@@ -103,48 +103,48 @@ export const PaymentsView: React.FC = () => {
             onClick={() => setActiveTab(activeTab === 'Received' ? 'All' : 'Received')}
             className={`p-3 rounded-2xl border cursor-pointer transition-all ${
               activeTab === 'Received'
-                ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
-                : 'bg-slate-50 border-slate-100 hover:bg-emerald-50/40'
+                ? 'bg-emerald-50 dark:bg-black border-emerald-300 dark:border-emerald-500/50 ring-2 ring-emerald-500/20 shadow-xs'
+                : 'bg-slate-50 dark:bg-black border-slate-100 dark:border-neutral-800 hover:bg-emerald-50/40 dark:hover:bg-neutral-900'
             }`}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
                 Total Received
               </span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: 12 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               </motion.div>
             </div>
-            <p className="text-base font-black text-emerald-700">{formatINR(totalReceived)}</p>
+            <p className="text-base font-black text-emerald-700 dark:text-emerald-400">{formatINR(totalReceived)}</p>
           </motion.div>
 
           <motion.div
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('persons')}
-            className="p-3 rounded-2xl border cursor-pointer transition-all bg-rose-50/70 border-rose-200/90 hover:bg-rose-100/60 shadow-xs"
+            className="p-3 rounded-2xl border cursor-pointer transition-all bg-rose-50/70 dark:bg-black border-rose-200/90 dark:border-neutral-800 hover:bg-rose-100/60 dark:hover:bg-neutral-900 shadow-xs"
             title="View Persons with Pending Balances"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-wider">
                 Total Pending
               </span>
               <motion.div
                 whileHover={{ scale: 1.25 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <Clock className="w-3.5 h-3.5 text-rose-600" />
+                <Clock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               </motion.div>
             </div>
-            <p className="text-base font-black text-rose-700">{formatINR(totalPending)}</p>
+            <p className="text-base font-black text-rose-700 dark:text-rose-400">{formatINR(totalPending)}</p>
           </motion.div>
         </div>
 
         {/* Tab selector */}
-        <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-xl mb-2.5">
+        <div className="grid grid-cols-3 bg-slate-100 dark:bg-neutral-900 p-1 rounded-xl mb-2.5 border dark:border-neutral-800">
           {(['All', 'Received', 'Paid'] as const).map(tab => (
             <motion.button
               key={tab}
@@ -154,8 +154,8 @@ export const PaymentsView: React.FC = () => {
               onClick={() => setActiveTab(tab)}
               className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
                 activeTab === tab
-                  ? 'bg-white text-slate-800 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-black text-slate-800 dark:text-white shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               {tab}
@@ -172,7 +172,7 @@ export const PaymentsView: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by person, ref no, or note..."
-            className="w-full pl-10 pr-4 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+            className="w-full pl-10 pr-4 py-1.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
           />
         </div>
       </motion.div>
@@ -219,7 +219,7 @@ export const PaymentsView: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(0.3, idx * 0.04), duration: 0.25 }}
                   whileHover={{ y: -2, scale: 1.01 }}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs hover:shadow-md transition-all group"
+                  className="bg-white dark:bg-black rounded-2xl p-4 border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all group"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">

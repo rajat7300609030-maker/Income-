@@ -49,7 +49,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onOpenNotifications }) => 
       initial={{ opacity: 0, y: -15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white px-5 pt-3 pb-5 rounded-b-3xl shadow-md shrink-0"
+      className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 dark:from-black dark:via-black dark:to-black dark:bg-black text-white px-5 pt-3 pb-5 rounded-b-3xl shadow-md dark:shadow-none dark:border-b dark:border-neutral-800 shrink-0"
     >
       {/* Upper row: App Logo & Brand Name, Actions */}
       <div className="flex items-center justify-between">

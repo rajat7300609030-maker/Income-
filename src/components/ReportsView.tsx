@@ -200,7 +200,7 @@ export const ReportsView: React.FC = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="bg-white px-4 pt-3 pb-3 border-b border-slate-100 shrink-0 space-y-3 shadow-2xs"
+        className="bg-white dark:bg-black px-4 pt-3 pb-3 border-b border-slate-100 dark:border-neutral-800 shrink-0 space-y-3 shadow-2xs"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -208,20 +208,20 @@ export const ReportsView: React.FC = () => {
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
               onClick={goBack}
-              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
+              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors"
               title="Go Back"
             >
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
             <div>
-              <h2 className="text-base font-bold text-slate-800 tracking-tight">Financial Reports</h2>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Financial Reports</h2>
               <p className="text-xs text-slate-400">Analytical summaries & exportable statements</p>
             </div>
           </div>
         </div>
 
         {/* Period Selector: Monthly / Yearly / Custom */}
-        <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-xl">
+        <div className="grid grid-cols-3 bg-slate-100 dark:bg-neutral-900 p-1 rounded-xl border dark:border-neutral-800">
           {(['Monthly', 'Yearly', 'Custom'] as const).map(p => (
             <motion.button
               key={p}
@@ -231,8 +231,8 @@ export const ReportsView: React.FC = () => {
               onClick={() => setReportPeriod(p)}
               className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
                 reportPeriod === p
-                  ? 'bg-white text-blue-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-black text-blue-700 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
               {p === 'Monthly' ? "This Month" : p === 'Yearly' ? "This Year" : 'Custom Range'}
@@ -278,12 +278,12 @@ export const ReportsView: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             whileHover={{ y: -2, scale: 1.02 }}
-            className="bg-white p-3 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all"
+            className="bg-white dark:bg-black p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all"
           >
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
               Income
             </span>
-            <p className="text-sm font-black text-emerald-600 mt-1">{formatINR(periodIncome)}</p>
+            <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">{formatINR(periodIncome)}</p>
           </motion.div>
 
           <motion.div
@@ -291,12 +291,12 @@ export const ReportsView: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             whileHover={{ y: -2, scale: 1.02 }}
-            className="bg-white p-3 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all"
+            className="bg-white dark:bg-black p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all"
           >
-            <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
               Expense
             </span>
-            <p className="text-sm font-black text-rose-600 mt-1">{formatINR(periodExpense)}</p>
+            <p className="text-sm font-black text-rose-600 dark:text-rose-400 mt-1">{formatINR(periodExpense)}</p>
           </motion.div>
 
           <motion.div
@@ -304,14 +304,14 @@ export const ReportsView: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             whileHover={{ y: -2, scale: 1.02 }}
-            className="bg-white p-3 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all"
+            className="bg-white dark:bg-black p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all"
           >
-            <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">
               Net Balance
             </span>
             <p
               className={`text-sm font-black mt-1 ${
-                periodNetBalance >= 0 ? 'text-blue-700' : 'text-rose-700'
+                periodNetBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-rose-700 dark:text-rose-400'
               }`}
             >
               {formatINR(periodNetBalance)}
@@ -325,7 +325,7 @@ export const ReportsView: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           whileHover={{ y: -1 }}
-          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all"
+          className="bg-white dark:bg-black p-4 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all"
         >
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -379,10 +379,10 @@ export const ReportsView: React.FC = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all"
+          className="bg-white dark:bg-black p-4 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs hover:shadow-md transition-all"
         >
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
               Category-wise Expense Breakdown
             </h4>
             <motion.div
@@ -409,13 +409,13 @@ export const ReportsView: React.FC = () => {
                     transition={{ delay: 0.25 + index * 0.04 }}
                   >
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-semibold text-slate-700">{item.name}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{item.name}</span>
                       <div className="space-x-2 text-right">
                         <span className="text-[11px] text-slate-400">{item.percentage}%</span>
-                        <strong className="text-slate-800 font-bold">{formatINR(item.amount)}</strong>
+                        <strong className="text-slate-800 dark:text-slate-100 font-bold">{formatINR(item.amount)}</strong>
                       </div>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-2 rounded-full bg-slate-100 dark:bg-neutral-900 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${item.percentage}%` }}
@@ -435,9 +435,9 @@ export const ReportsView: React.FC = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs space-y-2.5 hover:shadow-md transition-all"
+          className="bg-white dark:bg-black p-4 rounded-2xl border border-slate-100 dark:border-neutral-800 shadow-xs space-y-2.5 hover:shadow-md transition-all"
         >
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
             Export Options
           </h4>
           <p className="text-xs text-slate-400">Download formatted financial statements</p>

@@ -404,4 +404,26 @@ export const FirestoreSync = {
       return null;
     }
   },
+
+  // Delete All Data from Firestore Cloud permanently
+  async deleteAllFromCloud(): Promise<boolean> {
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid) return true;
+
+    try {
+      const collections = ['persons', 'income', 'expenses', 'payments', 'recycle_bin', 'transactions'];
+      for (const colName of collections) {
+        const snap = await getDocs(query(collection(db, colName), where('userId', '==', currentUid)));
+        if (!snap.empty) {
+          const batch = writeBatch(db);
+          snap.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+      return true;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, 'deleteAllFromCloud');
+      return false;
+    }
+  },
 };

@@ -80,29 +80,29 @@ export const PersonsView: React.FC = () => {
     if (status === 'to_receive') {
       return {
         cardClass:
-          'bg-white border border-slate-200/90 hover:border-emerald-400 hover:shadow-md shadow-xs transition-all duration-200',
+          'bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 hover:border-emerald-400 dark:hover:border-emerald-500/60 hover:shadow-md shadow-xs transition-all duration-200',
         statusBorder: 'border-l-4 border-l-emerald-500',
-        badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200/90',
-        amountColor: 'text-emerald-700',
+        badge: 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800/60',
+        amountColor: 'text-emerald-700 dark:text-emerald-400',
         dot: 'bg-emerald-500',
       };
     }
     if (status === 'to_pay') {
       return {
         cardClass:
-          'bg-white border border-slate-200/90 hover:border-rose-400 hover:shadow-md shadow-xs transition-all duration-200',
+          'bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 hover:border-rose-400 dark:hover:border-rose-500/60 hover:shadow-md shadow-xs transition-all duration-200',
         statusBorder: 'border-l-4 border-l-rose-500',
-        badge: 'bg-rose-50 text-rose-800 border border-rose-200/90',
-        amountColor: 'text-rose-700',
+        badge: 'bg-rose-50 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200/90 dark:border-rose-800/60',
+        amountColor: 'text-rose-700 dark:text-rose-400',
         dot: 'bg-rose-600',
       };
     }
     return {
       cardClass:
-        'bg-white border border-slate-200/90 hover:border-slate-300 hover:shadow-md shadow-xs transition-all duration-200',
-      statusBorder: 'border-l-4 border-l-slate-300',
-      badge: 'bg-slate-100 text-slate-700 border border-slate-200',
-      amountColor: 'text-slate-700',
+        'bg-white dark:bg-black border border-slate-200/90 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 hover:shadow-md shadow-xs transition-all duration-200',
+      statusBorder: 'border-l-4 border-l-slate-300 dark:border-l-neutral-700',
+      badge: 'bg-slate-100 dark:bg-neutral-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-neutral-800',
+      amountColor: 'text-slate-700 dark:text-slate-300',
       dot: 'bg-slate-400',
     };
   };
@@ -146,7 +146,7 @@ export const PersonsView: React.FC = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="bg-white px-4 pt-3 pb-3 border-b border-slate-100 shrink-0 shadow-2xs"
+        className="bg-white dark:bg-black px-4 pt-3 pb-3 border-b border-slate-100 dark:border-neutral-800 shrink-0 shadow-2xs"
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -154,13 +154,13 @@ export const PersonsView: React.FC = () => {
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
               onClick={goBack}
-              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
+              className="p-1.5 -ml-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors"
               title="Go Back"
             >
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
             <div>
-              <h2 className="text-base font-bold text-slate-800 tracking-tight">Persons & Contacts</h2>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">Persons & Contacts</h2>
               <p className="text-xs text-slate-400">Manage customers, employees & vendor ledgers</p>
             </div>
           </div>
@@ -190,7 +190,7 @@ export const PersonsView: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name, mobile, address..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 font-medium focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 font-medium focus:bg-white dark:focus:bg-black focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition-all"
           />
         </div>
 
@@ -206,7 +206,7 @@ export const PersonsView: React.FC = () => {
               className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                 activeFilter === f
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-neutral-800'
               }`}
             >
               {f}

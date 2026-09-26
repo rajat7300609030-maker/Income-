@@ -136,6 +136,7 @@ interface AppContextType {
   lockBiometric: () => void;
   toggleBiometric: (enabled: boolean) => void;
   resetToSampleData: () => void;
+  resetAllDataPermanently: () => Promise<void>;
   refreshData: () => void;
   currency: string;
   setCurrency: (currency: string) => void;
@@ -1181,6 +1182,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Reset to default financial records');
   };
 
+  const resetAllDataPermanently = async () => {
+    try {
+      setIsCloudSyncing(true);
+      // 1. Permanently wipe all LocalStorage records
+      LocalStorageManager.clearAllPermanently();
+
+      // 2. Clear all React state lists to empty arrays
+      setPersons([]);
+      setIncome([]);
+      setExpenses([]);
+      setPayments([]);
+      setRecycleBin([]);
+      setSelectedPersonForProfileState(null);
+      setEditItem(null);
+
+      // 3. Clear cloud database collections if logged in to Firestore
+      if (auth.currentUser?.uid) {
+        await FirestoreSync.deleteAllFromCloud();
+      }
+
+      showToast('All financial records, persons & transactions deleted permanently', 'success');
+    } catch (err: any) {
+      console.error('Error during permanent data reset:', err);
+      showToast('Data reset locally, cloud sync may have pending items', 'info');
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  };
+
   const syncNow = () => {
     refreshData();
     const now = new Date().toISOString();
@@ -1336,6 +1366,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lockBiometric,
         toggleBiometric,
         resetToSampleData,
+        resetAllDataPermanently,
         refreshData,
         currency,
         setCurrency,

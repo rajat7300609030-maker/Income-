@@ -25,20 +25,15 @@ import {
   Banknote,
   Trash2,
   Edit2,
-  Sun,
-  Moon,
-  Smartphone,
   Download,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatINR } from '../services/calculations';
 import { AnimatedCounter } from './AnimatedCounter';
 import { TransactionDetailModal } from './TransactionDetailModal';
-import { InstallAppModal } from './InstallAppModal';
 import { Transaction } from '../types';
 
 export const DashboardView: React.FC = () => {
-  const [showInstallModal, setShowInstallModal] = React.useState(false);
   const {
     user,
     totals,
@@ -52,8 +47,6 @@ export const DashboardView: React.FC = () => {
     startEditItem,
     recycleBinCount,
     openTransactionsWithType,
-    isDark,
-    toggleDarkMode,
   } = useApp();
 
   // Selected Transaction for Floating Detail Popup (with 5-second auto-close)
@@ -277,26 +270,8 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Shortcuts: Install, Theme toggle, Search & Settings */}
+        {/* Action Shortcuts: Search & Settings */}
         <div className="flex items-center space-x-1.5">
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setShowInstallModal(true)}
-            className="p-2 rounded-xl text-blue-600 dark:text-cyan-400 hover:bg-blue-50/70 dark:hover:bg-slate-700/60 border border-blue-200/80 dark:border-slate-700 transition-colors"
-            title="Install Mobile App (APK)"
-          >
-            <Smartphone className="w-4 h-4" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={toggleDarkMode}
-            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50/70 dark:hover:bg-slate-700/60 border border-slate-100 dark:border-slate-700 transition-colors"
-            title={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
-          >
-            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-          </motion.button>
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
@@ -358,19 +333,19 @@ export const DashboardView: React.FC = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         whileHover={{ y: -2 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white p-5 border border-blue-300/40 shadow-lg shadow-blue-900/30"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 dark:from-black dark:via-black dark:to-black dark:bg-black text-white p-5 border border-blue-300/40 dark:border-neutral-800 shadow-lg shadow-blue-900/30 dark:shadow-none"
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-blue-100 text-xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center space-x-2 text-blue-100 dark:text-slate-300 text-xs font-semibold uppercase tracking-wider">
             <motion.div
               whileHover={{ scale: 1.2, rotate: 15 }}
             >
-              <Wallet className="w-4 h-4 text-cyan-300" />
+              <Wallet className="w-4 h-4 text-cyan-300 dark:text-cyan-400" />
             </motion.div>
             <span>Current Net Balance</span>
           </div>
           <span
-            className="text-[10px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full border border-white/30 backdrop-blur-xs shadow-2xs"
+            className="text-[10px] font-bold bg-white/20 dark:bg-neutral-900 text-white dark:text-slate-200 px-2.5 py-0.5 rounded-full border border-white/30 dark:border-neutral-800 backdrop-blur-xs shadow-2xs"
           >
             Real-time
           </span>
@@ -385,22 +360,22 @@ export const DashboardView: React.FC = () => {
               duration={1000}
             />
           </h2>
-          <p className="text-xs text-blue-200 mt-1 flex items-center flex-wrap gap-1">
+          <p className="text-xs text-blue-200 dark:text-slate-400 mt-1 flex items-center flex-wrap gap-1">
             <span>Total Income (</span>
-            <AnimatedCounter value={totals.totalIncome} duration={1000} className="font-semibold text-white/95" />
+            <AnimatedCounter value={totals.totalIncome} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
             <span>) − Total Expenses (</span>
-            <AnimatedCounter value={totals.totalExpenses} duration={1000} className="font-semibold text-white/95" />
+            <AnimatedCounter value={totals.totalExpenses} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
             <span>)</span>
           </p>
         </div>
 
         {/* Dual Income Breakdown: Banking Income & Cash Income (Only Income, No Expense or Other deductions) */}
-        <div className="mt-4 pt-3 border-t border-white/20 relative z-10">
+        <div className="mt-4 pt-3 border-t border-white/20 dark:border-neutral-800 relative z-10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10.5px] font-bold text-blue-100 uppercase tracking-wider flex items-center space-x-1">
+            <span className="text-[10.5px] font-bold text-blue-100 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1">
               <span>Income Breakdown</span>
             </span>
-            <span className="text-[9.5px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full backdrop-blur-xs">
+            <span className="text-[9.5px] font-bold bg-white/20 dark:bg-neutral-900 text-white dark:text-slate-200 px-2 py-0.5 rounded-full backdrop-blur-xs border dark:border-neutral-800">
               Income Only
             </span>
           </div>
@@ -409,22 +384,22 @@ export const DashboardView: React.FC = () => {
             {/* Banking Income Card (Bank & UPI) */}
             <motion.div
               id="net-balance-bank-card"
-              whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 setCurrentView('payments');
                 setActiveTab('payments');
               }}
-              className="bg-white/12 backdrop-blur-xs rounded-2xl p-3 border border-cyan-300/30 hover:border-cyan-300 shadow-md shadow-cyan-950/20 transition-all cursor-pointer"
+              className="bg-white/12 dark:bg-neutral-950 backdrop-blur-xs rounded-2xl p-3 border border-cyan-300/30 dark:border-neutral-800 hover:border-cyan-300 dark:hover:border-neutral-700 shadow-md shadow-cyan-950/20 dark:shadow-none transition-all cursor-pointer"
             >
               <div className="flex items-center space-x-1.5 mb-1.5">
                 <motion.div
                   whileHover={{ rotate: 12, scale: 1.1 }}
-                  className="w-6 h-6 rounded-lg bg-cyan-400/25 flex items-center justify-center text-cyan-200 shrink-0 shadow-2xs"
+                  className="w-6 h-6 rounded-lg bg-cyan-400/25 dark:bg-cyan-950/60 flex items-center justify-center text-cyan-200 dark:text-cyan-400 shrink-0 shadow-2xs"
                 >
                   <Landmark className="w-3.5 h-3.5" />
                 </motion.div>
-                <span className="text-[10.5px] font-bold text-cyan-200 uppercase tracking-wider truncate">
+                <span className="text-[10.5px] font-bold text-cyan-200 dark:text-cyan-400 uppercase tracking-wider truncate">
                   Banking Income
                 </span>
               </div>
@@ -436,7 +411,7 @@ export const DashboardView: React.FC = () => {
                   duration={1000}
                 />
               </p>
-              <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-cyan-200/90 font-medium">
+              <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-cyan-200/90 dark:text-cyan-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 inline-block shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
                 <span className="truncate">Bank & UPI (No Expense)</span>
               </div>
@@ -445,22 +420,22 @@ export const DashboardView: React.FC = () => {
             {/* Cash Income Card */}
             <motion.div
               id="net-balance-cash-card"
-              whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 setCurrentView('daily');
                 setActiveTab('daily');
               }}
-              className="bg-white/12 backdrop-blur-xs rounded-2xl p-3 border border-emerald-300/30 hover:border-emerald-300 shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
+              className="bg-white/12 dark:bg-neutral-950 backdrop-blur-xs rounded-2xl p-3 border border-emerald-300/30 dark:border-neutral-800 hover:border-emerald-300 dark:hover:border-neutral-700 shadow-md shadow-emerald-950/20 dark:shadow-none transition-all cursor-pointer"
             >
               <div className="flex items-center space-x-1.5 mb-1.5">
                 <motion.div
                   whileHover={{ rotate: -12, scale: 1.1 }}
-                  className="w-6 h-6 rounded-lg bg-emerald-400/25 flex items-center justify-center text-emerald-200 shrink-0 shadow-2xs"
+                  className="w-6 h-6 rounded-lg bg-emerald-400/25 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-200 dark:text-emerald-400 shrink-0 shadow-2xs"
                 >
                   <Banknote className="w-3.5 h-3.5" />
                 </motion.div>
-                <span className="text-[10.5px] font-bold text-emerald-200 uppercase tracking-wider truncate">
+                <span className="text-[10.5px] font-bold text-emerald-200 dark:text-emerald-400 uppercase tracking-wider truncate">
                   Cash Income
                 </span>
               </div>
@@ -472,7 +447,7 @@ export const DashboardView: React.FC = () => {
                   duration={1000}
                 />
               </p>
-              <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-emerald-200/90 font-medium">
+              <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-emerald-200/90 dark:text-emerald-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 inline-block shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
                 <span className="truncate">Cash Received (No Expense)</span>
               </div>
@@ -602,19 +577,19 @@ export const DashboardView: React.FC = () => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => openTransactionsWithType('Income')}
-            className="bg-white rounded-2xl p-3.5 border border-emerald-100/90 shadow-sm hover:shadow-md hover:shadow-emerald-500/15 transition-all cursor-pointer"
+            className="bg-white dark:bg-black rounded-2xl p-3.5 border border-emerald-100/90 dark:border-neutral-800 shadow-sm hover:shadow-md hover:shadow-emerald-500/15 transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between text-slate-500 mb-1.5">
-              <span className="text-[11px] font-semibold text-slate-600">Total Income</span>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Total Income</span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: 12 }}
                 transition={{ type: "spring", stiffness: 400 }}
-                className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs shadow-emerald-500/30"
+                className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs shadow-emerald-500/30"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
               </motion.div>
             </div>
-            <p className="text-lg font-black text-emerald-600 tracking-tight">
+            <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
               <AnimatedCounter
                 value={totals.totalIncome}
                 glow
@@ -622,7 +597,7 @@ export const DashboardView: React.FC = () => {
                 duration={1000}
               />
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Sum of all inflows • Tap for Income only</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Sum of all inflows • Tap for Income only</p>
           </motion.div>
 
           {/* Total Expenses */}
@@ -634,19 +609,19 @@ export const DashboardView: React.FC = () => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => openTransactionsWithType('Expense')}
-            className="bg-white rounded-2xl p-3.5 border border-rose-100/90 shadow-sm hover:shadow-md hover:shadow-rose-500/15 transition-all cursor-pointer"
+            className="bg-white dark:bg-black rounded-2xl p-3.5 border border-rose-100/90 dark:border-neutral-800 shadow-sm hover:shadow-md hover:shadow-rose-500/15 transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between text-slate-500 mb-1.5">
-              <span className="text-[11px] font-semibold text-slate-600">Total Expenses</span>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Total Expenses</span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: -12 }}
                 transition={{ type: "spring", stiffness: 400 }}
-                className="w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shadow-xs shadow-rose-500/30"
+                className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs shadow-rose-500/30"
               >
                 <TrendingDown className="w-3.5 h-3.5" />
               </motion.div>
             </div>
-            <p className="text-lg font-black text-rose-600 tracking-tight">
+            <p className="text-lg font-black text-rose-600 dark:text-rose-400 tracking-tight">
               <AnimatedCounter
                 value={totals.totalExpenses}
                 glow
@@ -654,7 +629,7 @@ export const DashboardView: React.FC = () => {
                 duration={1000}
               />
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Sum of all outflows • Tap for Expenses only</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Sum of all outflows • Tap for Expenses only</p>
           </motion.div>
 
           {/* Total Payments */}
@@ -666,19 +641,19 @@ export const DashboardView: React.FC = () => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => openTransactionsWithType('Payment')}
-            className="bg-white rounded-2xl p-3.5 border border-blue-100/90 shadow-sm hover:shadow-md hover:shadow-blue-500/15 transition-all cursor-pointer"
+            className="bg-white dark:bg-black rounded-2xl p-3.5 border border-blue-100/90 dark:border-neutral-800 shadow-sm hover:shadow-md hover:shadow-blue-500/15 transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between text-slate-500 mb-1.5">
-              <span className="text-[11px] font-semibold text-slate-600">Total Payments</span>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Total Payments</span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: 10 }}
                 transition={{ type: "spring", stiffness: 400 }}
-                className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shadow-xs shadow-blue-500/30"
+                className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shadow-blue-500/30"
               >
                 <CreditCard className="w-3.5 h-3.5" />
               </motion.div>
             </div>
-            <p className="text-lg font-black text-blue-600 tracking-tight">
+            <p className="text-lg font-black text-blue-600 dark:text-blue-400 tracking-tight">
               <AnimatedCounter
                 value={totals.totalPayments}
                 glow
@@ -686,7 +661,7 @@ export const DashboardView: React.FC = () => {
                 duration={1000}
               />
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Settlements cleared • Tap for Payments only</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Settlements cleared • Tap for Payments only</p>
           </motion.div>
 
           {/* Pending Payments */}
@@ -698,19 +673,19 @@ export const DashboardView: React.FC = () => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => openTransactionsWithType('Payment')}
-            className="bg-white rounded-2xl p-3.5 border border-red-100/90 shadow-sm hover:shadow-md hover:shadow-red-500/15 transition-all cursor-pointer"
+            className="bg-white dark:bg-black rounded-2xl p-3.5 border border-red-100/90 dark:border-neutral-800 shadow-sm hover:shadow-md hover:shadow-red-500/15 transition-all cursor-pointer"
           >
-            <div className="flex items-center justify-between text-slate-500 mb-1.5">
-              <span className="text-[11px] font-semibold text-slate-600">Pending Amount</span>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Pending Amount</span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: -15 }}
                 transition={{ type: "spring", stiffness: 400 }}
-                className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center shadow-xs shadow-red-500/30"
+                className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 flex items-center justify-center shadow-xs shadow-red-500/30"
               >
                 <Clock className="w-3.5 h-3.5" />
               </motion.div>
             </div>
-            <p className="text-lg font-black text-red-700 tracking-tight">
+            <p className="text-lg font-black text-red-700 dark:text-red-400 tracking-tight">
               <AnimatedCounter
                 value={totals.pendingPayments}
                 glow
@@ -718,7 +693,7 @@ export const DashboardView: React.FC = () => {
                 duration={1000}
               />
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Person ledger balance • Tap for Payments only</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Person ledger balance • Tap for Payments only</p>
           </motion.div>
         </div>
       </div>
@@ -730,24 +705,24 @@ export const DashboardView: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         whileHover={{ y: -2 }}
-        className="bg-white rounded-2xl p-4 border border-indigo-100/70 shadow-sm hover:shadow-md transition-all"
+        className="bg-white dark:bg-black rounded-2xl p-4 border border-indigo-100/70 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all"
       >
-        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">
           Periodic Breakdown
         </h3>
 
         {/* Today's Section */}
-        <div className="mb-3 pb-3 border-b border-slate-100">
+        <div className="mb-3 pb-3 border-b border-slate-100 dark:border-neutral-800">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
             Today's Activity
           </span>
           <div className="grid grid-cols-3 gap-2 text-center">
             <motion.div
               whileHover={{ scale: 1.04 }}
-              className="p-2 rounded-xl bg-emerald-50/80 border border-emerald-100/60 shadow-[0_2px_8px_rgba(16,185,129,0.12)] transition-all"
+              className="p-2 rounded-xl bg-emerald-50/80 dark:bg-neutral-950 border border-emerald-100/60 dark:border-neutral-800 shadow-[0_2px_8px_rgba(16,185,129,0.12)] transition-all"
             >
-              <span className="text-[10px] font-semibold text-emerald-700 block">Income</span>
-              <span className="text-xs font-bold text-emerald-800">
+              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 block">Income</span>
+              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
                 <AnimatedCounter
                   value={totals.todayIncome}
                   glow
@@ -758,10 +733,10 @@ export const DashboardView: React.FC = () => {
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.04 }}
-              className="p-2 rounded-xl bg-rose-50/80 border border-rose-100/60 shadow-[0_2px_8px_rgba(244,63,94,0.12)] transition-all"
+              className="p-2 rounded-xl bg-rose-50/80 dark:bg-neutral-950 border border-rose-100/60 dark:border-neutral-800 shadow-[0_2px_8px_rgba(244,63,94,0.12)] transition-all"
             >
-              <span className="text-[10px] font-semibold text-rose-700 block">Expense</span>
-              <span className="text-xs font-bold text-rose-800">
+              <span className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 block">Expense</span>
+              <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
                 <AnimatedCounter
                   value={totals.todayExpenses}
                   glow
@@ -772,10 +747,10 @@ export const DashboardView: React.FC = () => {
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.04 }}
-              className="p-2 rounded-xl bg-blue-50/80 border border-blue-100/60 shadow-[0_2px_8px_rgba(59,130,246,0.12)] transition-all"
+              className="p-2 rounded-xl bg-blue-50/80 dark:bg-neutral-950 border border-blue-100/60 dark:border-neutral-800 shadow-[0_2px_8px_rgba(59,130,246,0.12)] transition-all"
             >
-              <span className="text-[10px] font-semibold text-blue-700 block">Payments</span>
-              <span className="text-xs font-bold text-blue-800">
+              <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-400 block">Payments</span>
+              <span className="text-xs font-bold text-blue-800 dark:text-blue-300">
                 <AnimatedCounter
                   value={totals.todayPayments}
                   glow
@@ -793,17 +768,17 @@ export const DashboardView: React.FC = () => {
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
               This Month's Totals
             </span>
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-neutral-900 px-2 py-0.5 rounded-full border dark:border-neutral-800">
               Net = Income − Expense
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <motion.div
               whileHover={{ scale: 1.02, x: 2 }}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/80 shadow-[0_2px_8px_rgba(16,185,129,0.08)] transition-all"
+              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-100/80 dark:border-neutral-800 shadow-[0_2px_8px_rgba(16,185,129,0.08)] transition-all"
             >
-              <span className="text-xs font-medium text-slate-600">Month's Income</span>
-              <span className="text-xs font-bold text-emerald-600">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Month's Income</span>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 <AnimatedCounter
                   value={totals.thisMonthIncome}
                   glow
@@ -814,10 +789,10 @@ export const DashboardView: React.FC = () => {
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.02, x: -2 }}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/80 shadow-[0_2px_8px_rgba(244,63,94,0.08)] transition-all"
+              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-100/80 dark:border-neutral-800 shadow-[0_2px_8px_rgba(244,63,94,0.08)] transition-all"
             >
-              <span className="text-xs font-medium text-slate-600">Month's Expense</span>
-              <span className="text-xs font-bold text-rose-600">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Month's Expense</span>
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
                 <AnimatedCounter
                   value={totals.thisMonthExpenses}
                   glow
@@ -829,9 +804,9 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {/* Month Net Balance (Income minus Expense) */}
-          <div className="mt-2 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 border border-slate-100">
-            <span className="text-xs font-semibold text-slate-600">Month Net (Income − Expense):</span>
-            <span className={`text-xs font-black ${totals.thisMonthNet >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <div className="mt-2 flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50/90 dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800">
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Month Net (Income − Expense):</span>
+            <span className={`text-xs font-black ${totals.thisMonthNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               <AnimatedCounter
                 value={totals.thisMonthNet}
                 glow
@@ -850,7 +825,7 @@ export const DashboardView: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         whileHover={{ y: -2 }}
-        className="bg-white rounded-2xl p-4 border border-sky-100/80 shadow-sm hover:shadow-md transition-all"
+        className="bg-white dark:bg-black rounded-2xl p-4 border border-sky-100/80 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all"
       >
         {/* Card Header with Filter Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
@@ -874,7 +849,7 @@ export const DashboardView: React.FC = () => {
           {/* Fully Automatic Day / Week / Month / Year Filter Buttons */}
           <div
             id="chart-filter-controls"
-            className="flex items-center self-start sm:self-auto bg-slate-100/90 p-1 rounded-xl border border-slate-200/70"
+            className="flex items-center self-start sm:self-auto bg-slate-100/90 dark:bg-neutral-950 p-1 rounded-xl border border-slate-200/70 dark:border-neutral-800"
           >
             {(['day', 'week', 'month', 'year'] as const).map((filter) => {
               const isActive = chartFilter === filter;
@@ -890,7 +865,7 @@ export const DashboardView: React.FC = () => {
                   className={`relative px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all capitalize select-none cursor-pointer ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-neutral-800'
                   }`}
                 >
                   {filter}
@@ -901,19 +876,19 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Automatic Period Summary Strip */}
-        <div className="bg-slate-50/80 rounded-xl p-2.5 mb-3 border border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="bg-slate-50/80 dark:bg-neutral-950 rounded-xl p-2.5 mb-3 border border-slate-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 inline-block shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
-            <span className="text-[10.5px] text-slate-500 font-medium">Income:</span>
-            <span className="text-[11px] font-bold text-emerald-600">
+            <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">Income:</span>
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
               <AnimatedCounter value={chartPeriodTotals.totalInc} glow glowColor="emerald" duration={800} />
             </span>
           </div>
 
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 inline-block shadow-[0_0_5px_rgba(244,63,94,0.5)]"></span>
-            <span className="text-[10.5px] text-slate-500 font-medium">Expense:</span>
-            <span className="text-[11px] font-bold text-rose-600">
+            <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">Expense:</span>
+            <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">
               <AnimatedCounter value={chartPeriodTotals.totalExp} glow glowColor="rose" duration={800} />
             </span>
           </div>
@@ -921,7 +896,7 @@ export const DashboardView: React.FC = () => {
           <div className="flex items-center space-x-1">
             <span className="text-[10.5px] text-slate-400 font-medium">Net:</span>
             <span className={`text-[11px] font-black px-1.5 py-0.5 rounded-md ${
-              chartPeriodTotals.net >= 0 ? 'bg-emerald-100/70 text-emerald-700' : 'bg-rose-100/70 text-rose-700'
+              chartPeriodTotals.net >= 0 ? 'bg-emerald-100/70 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300' : 'bg-rose-100/70 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
             }`}>
               {chartPeriodTotals.net >= 0 ? '+' : ''}{formatINR(chartPeriodTotals.net)}
             </span>
@@ -929,7 +904,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {chartPeriodTotals.totalInc === 0 && chartPeriodTotals.totalExp === 0 && (
-          <div className="py-2 px-3 text-center text-[11px] text-slate-400 font-medium bg-slate-50/70 rounded-xl mb-2 border border-dashed border-slate-200">
+          <div className="py-2 px-3 text-center text-[11px] text-slate-400 font-medium bg-slate-50/70 dark:bg-neutral-950 rounded-xl mb-2 border border-dashed border-slate-200 dark:border-neutral-800">
             No income or expense records found for this period
           </div>
         )}
@@ -939,7 +914,7 @@ export const DashboardView: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[11px] flex items-center justify-between shadow-sm"
+            className="mb-2 px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-neutral-900 border dark:border-neutral-800 text-white text-[11px] flex items-center justify-between shadow-sm"
           >
             <span className="font-bold text-cyan-300">{chartData[hoveredBarIndex].fullLabel}</span>
             <div className="flex items-center space-x-3">
@@ -960,7 +935,7 @@ export const DashboardView: React.FC = () => {
         )}
 
         {/* Bar Chart Visualizer with Animated Bars */}
-        <div className="h-44 flex items-end justify-between pt-4 pb-2 px-1 border-b border-slate-100">
+        <div className="h-44 flex items-end justify-between pt-4 pb-2 px-1 border-b border-slate-100 dark:border-neutral-800">
           {chartData.map((d, i) => {
             const isHovered = hoveredBarIndex === i;
             const incHeight = d.income > 0 ? Math.max(6, (d.income / maxChartVal) * 115) : 0;
@@ -973,7 +948,7 @@ export const DashboardView: React.FC = () => {
                 onMouseLeave={() => setHoveredBarIndex(null)}
                 onClick={() => setHoveredBarIndex(hoveredBarIndex === i ? null : i)}
                 className={`flex flex-col items-center flex-1 space-y-1.5 transition-all p-1 rounded-xl cursor-pointer ${
-                  isHovered ? 'bg-slate-50 ring-1 ring-blue-400/40 shadow-2xs' : 'hover:bg-slate-50/60'
+                  isHovered ? 'bg-slate-50 dark:bg-neutral-900 ring-1 ring-blue-400/40 shadow-2xs' : 'hover:bg-slate-50/60 dark:hover:bg-neutral-900/60'
                 }`}
               >
                 <div className="flex items-end space-x-1 sm:space-x-1.5 h-32">
@@ -1003,7 +978,7 @@ export const DashboardView: React.FC = () => {
                   />
                 </div>
                 <span className={`text-[9.5px] sm:text-[10px] font-semibold truncate max-w-full text-center ${
-                  isHovered ? 'text-blue-600 font-bold' : 'text-slate-500'
+                  isHovered ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-500 dark:text-slate-400'
                 }`}>
                   {d.label}
                 </span>
@@ -1035,10 +1010,10 @@ export const DashboardView: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         whileHover={{ y: -2 }}
-        className="bg-white rounded-2xl p-4 border border-indigo-50/90 shadow-sm hover:shadow-md transition-all mb-2"
+        className="bg-white dark:bg-black rounded-2xl p-4 border border-indigo-50/90 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all mb-2"
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
             Recent Transactions
           </h3>
           <motion.button
@@ -1046,7 +1021,7 @@ export const DashboardView: React.FC = () => {
             whileHover={{ x: 3 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => openTransactionsWithType('All')}
-            className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-0.5 cursor-pointer"
+            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center space-x-0.5 cursor-pointer"
           >
             <span>View All</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -1056,17 +1031,17 @@ export const DashboardView: React.FC = () => {
         {transactions.length === 0 ? (
           <p className="text-xs text-slate-400 text-center py-4">No transactions recorded yet</p>
         ) : (
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-neutral-800">
             {transactions.slice(0, 4).map((tx, idx) => (
               <motion.div
                 key={`${tx.id || 'tx'}-${idx}`}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.04 * idx, duration: 0.2 }}
-                whileHover={{ x: 4, backgroundColor: "rgba(248, 250, 252, 0.9)" }}
+                whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleTxClick(tx)}
-                className="py-2.5 px-2 rounded-xl flex items-center justify-between transition-all cursor-pointer"
+                className="py-2.5 px-2 rounded-xl flex items-center justify-between hover:bg-slate-50 dark:hover:bg-neutral-900 transition-all cursor-pointer"
                 title="Tap to view or edit"
               >
                 <div className="flex items-center space-x-3">
@@ -1139,12 +1114,6 @@ export const DashboardView: React.FC = () => {
         isOpen={Boolean(selectedTxDetail)}
         onClose={() => setSelectedTxDetail(null)}
         onEdit={handleEditFromDetail}
-      />
-
-      {/* Direct Mobile App Install Modal */}
-      <InstallAppModal
-        isOpen={showInstallModal}
-        onClose={() => setShowInstallModal(false)}
       />
     </div>
   );
