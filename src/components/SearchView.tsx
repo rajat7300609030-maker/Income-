@@ -251,11 +251,17 @@ export const SearchView: React.FC = () => {
                           </motion.div>
 
                           <div>
-                            <p className="text-xs font-bold text-slate-800">
-                              {tx.personName || tx.category || tx.type}
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                              {tx.type === 'Expense'
+                                ? (tx.note || tx.category || tx.type)
+                                : tx.type === 'Income'
+                                ? (tx.note || tx.personName || tx.type)
+                                : (tx.personName || tx.category || tx.type)}
                             </p>
                             <p className="text-[10px] text-slate-400">
                               {tx.date} • {tx.paymentMethod}
+                              {tx.type === 'Expense' && tx.note && tx.category && ` • ${tx.category}`}
+                              {tx.type === 'Income' && tx.note && ` • ${tx.personName || 'Income'}`}
                             </p>
                           </div>
                         </div>

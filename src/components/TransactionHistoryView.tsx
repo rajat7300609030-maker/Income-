@@ -12,7 +12,9 @@ import {
   X,
   ArrowLeft,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Tag,
+  User,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Transaction, TransactionType } from '../types';
@@ -521,8 +523,12 @@ export const TransactionHistoryView: React.FC = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800">
-                      {tx.personName || tx.category || tx.type}
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                      {tx.type === 'Expense'
+                        ? (tx.note || tx.category || tx.type)
+                        : tx.type === 'Income'
+                        ? (tx.note || tx.personName || tx.type)
+                        : (tx.personName || tx.category || tx.type)}
                     </h4>
 
                     <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 mt-0.5">
@@ -531,14 +537,39 @@ export const TransactionHistoryView: React.FC = () => {
                         <span>{tx.date}</span>
                       </span>
                       <span>•</span>
-                      <span className="font-semibold text-slate-600">{tx.paymentMethod}</span>
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">{tx.paymentMethod}</span>
                       {tx.paymentDirection && (
                         <span className="text-blue-600 font-semibold">({tx.paymentDirection})</span>
                       )}
                     </div>
 
-                    {tx.note && (
-                      <p className="text-[10px] text-slate-500 mt-1 max-w-[190px] truncate">{tx.note}</p>
+                    {tx.type === 'Expense' ? (
+                      tx.note && tx.category ? (
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 max-w-[190px] truncate flex items-center space-x-1">
+                          <Tag className="w-3 h-3 text-rose-500 shrink-0" />
+                          <span className="font-medium">{tx.category}</span>
+                        </p>
+                      ) : null
+                    ) : tx.type === 'Income' ? (
+                      tx.note ? (
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 max-w-[190px] truncate flex items-center space-x-1">
+                          {tx.personName ? (
+                            <>
+                              <User className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="font-medium">{tx.personName}</span>
+                            </>
+                          ) : (
+                            <>
+                              <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="font-medium">Income</span>
+                            </>
+                          )}
+                        </p>
+                      ) : null
+                    ) : (
+                      tx.note && (
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 max-w-[190px] truncate">{tx.note}</p>
+                      )
                     )}
                   </div>
                 </div>

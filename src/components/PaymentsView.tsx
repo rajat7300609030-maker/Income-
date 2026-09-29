@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Handshake, Search, ArrowDownLeft, ArrowUpRight, Clock, Hash, Calendar, Edit2, Trash2, User, ArrowLeft, Tag } from 'lucide-react';
+import { Plus, Handshake, Search, ArrowDownLeft, ArrowUpRight, Clock, Hash, Calendar, Edit2, Trash2, User, ArrowLeft, Tag, Wallet } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PaymentDirection, PaymentRecord } from '../types';
 import { formatINR, calculatePersonSummary } from '../services/calculations';
@@ -32,7 +32,15 @@ export const PaymentsView: React.FC = () => {
       .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
   }, [payments]);
 
-  const totalPending = useMemo(() => {
+  const currentNetBalance = useMemo(() => {
+    if (totals?.currentBalance !== undefined) return totals.currentBalance;
+    if (totals?.netBalance !== undefined) return totals.netBalance;
+    const inc = (income || []).reduce((acc, i) => acc + (Number(i?.amount) || 0), 0);
+    const exp = (expenses || []).reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+    return inc - exp;
+  }, [totals, income, expenses]);
+
+  const currentPendingAmount = useMemo(() => {
     if (totals?.pendingPayments !== undefined) {
       return totals.pendingPayments;
     }
@@ -95,33 +103,48 @@ export const PaymentsView: React.FC = () => {
           </motion.button>
         </div>
 
-        {/* Top Summary: Received vs Pending */}
+        {/* Top Summary: Current Net Balance & Current Pending Amount */}
         <div className="grid grid-cols-2 gap-2.5 mb-3">
+          {/* Card 1: Current Net Balance (previously Total Received) */}
           <motion.div
+            id="payments-current-net-balance-card"
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab(activeTab === 'Received' ? 'All' : 'Received')}
             className={`p-3 rounded-2xl border cursor-pointer transition-all ${
               activeTab === 'Received'
                 ? 'bg-emerald-50 dark:bg-black border-emerald-300 dark:border-emerald-500/50 ring-2 ring-emerald-500/20 shadow-xs'
-                : 'bg-slate-50 dark:bg-black border-slate-100 dark:border-neutral-800 hover:bg-emerald-50/40 dark:hover:bg-neutral-900'
+                : 'bg-emerald-50/70 dark:bg-black border-emerald-200/90 dark:border-neutral-800 hover:bg-emerald-100/60 dark:hover:bg-neutral-900 shadow-xs'
             }`}
+            title="Current Net Balance (Tap to filter Received)"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
-                Total Received
+                Current Net Balance
               </span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: 12 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               </motion.div>
             </div>
-            <p className="text-base font-black text-emerald-700 dark:text-emerald-400">{formatINR(totalReceived)}</p>
+            <p className={`text-base font-black tracking-tight ${
+              currentNetBalance >= 0
+                ? 'text-emerald-700 dark:text-emerald-400'
+                : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              {formatINR(currentNetBalance)}
+            </p>
+            <div className="flex items-center justify-between mt-1 text-[9.5px] text-slate-500 dark:text-slate-400 font-medium">
+              <span>Rec: {formatINR(totalReceived)}</span>
+              <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Net Active</span>
+            </div>
           </motion.div>
 
+          {/* Card 2: Current Pending Amount */}
           <motion.div
+            id="payments-current-pending-card"
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('persons')}
@@ -130,7 +153,7 @@ export const PaymentsView: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-wider">
-                Total Pending
+                Current Pending Amount
               </span>
               <motion.div
                 whileHover={{ scale: 1.25 }}
@@ -139,7 +162,13 @@ export const PaymentsView: React.FC = () => {
                 <Clock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               </motion.div>
             </div>
-            <p className="text-base font-black text-rose-700 dark:text-rose-400">{formatINR(totalPending)}</p>
+            <p className="text-base font-black text-rose-700 dark:text-rose-400 tracking-tight">
+              {formatINR(currentPendingAmount)}
+            </p>
+            <div className="flex items-center justify-between mt-1 text-[9.5px] text-slate-500 dark:text-slate-400 font-medium">
+              <span>Party Dues</span>
+              <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400">View Ledgers →</span>
+            </div>
           </motion.div>
         </div>
 
