@@ -116,8 +116,6 @@ export const PersonFormModal: React.FC = () => {
   ].filter(Boolean).length;
   const completionPercentage = Math.round((completedFields / totalRequiredFields) * 100);
 
-  if (!isOpen) return null;
-
   // Check if each specific field has been modified from original during edit
   const isNameModified = isEditing && original && name !== original.name;
   const isMobileModified = isEditing && original && mobile !== original.mobile;
@@ -193,8 +191,16 @@ export const PersonFormModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs">
+      {isOpen && (
         <motion.div
+          key="person-form-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="person-form-card"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -737,7 +743,8 @@ export const PersonFormModal: React.FC = () => {
             </div>
           </form>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

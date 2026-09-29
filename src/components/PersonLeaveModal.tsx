@@ -149,16 +149,14 @@ export const PersonLeaveModal: React.FC<PersonLeaveModalProps> = ({
     onClose();
   };
 
-  if (!isOpen || !person) return null;
-
-  const rate = Number(person.salaryAmount) || 0;
-  const isDaily = person.salaryType === 'Daily';
-  const isMonthly = person.salaryType === 'Monthly';
+  const rate = Number(person?.salaryAmount) || 0;
+  const isDaily = person?.salaryType === 'Daily';
+  const isMonthly = person?.salaryType === 'Monthly';
   const dailyRate = isDaily ? rate : isMonthly ? Math.round(rate / 30) : 0;
   const totalDeduction = leaveDays * dailyRate;
 
   // Calculate working days from joining date
-  const joiningDateObj = person.joiningDate ? new Date(person.joiningDate + 'T00:00:00') : new Date();
+  const joiningDateObj = person?.joiningDate ? new Date(person.joiningDate + 'T00:00:00') : new Date();
   const totalDaysSinceJoining = Math.max(
     1,
     Math.round((Date.now() - joiningDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1
@@ -167,12 +165,16 @@ export const PersonLeaveModal: React.FC<PersonLeaveModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div
-        key="person-leave-modal-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
-      >
+      {isOpen && person && (
         <motion.div
-          key="person-leave-modal-dialog"
+          key="person-leave-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="person-leave-modal-dialog"
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -426,7 +428,8 @@ export const PersonLeaveModal: React.FC<PersonLeaveModalProps> = ({
             </button>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

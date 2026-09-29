@@ -26,6 +26,7 @@ import {
   Trash2,
   Edit2,
   Download,
+  Tag,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatINR } from '../services/calculations';
@@ -44,6 +45,7 @@ export const DashboardView: React.FC = () => {
     income,
     expenses,
     payments,
+    persons,
     startEditItem,
     recycleBinCount,
     openTransactionsWithType,
@@ -1032,84 +1034,188 @@ export const DashboardView: React.FC = () => {
           <p className="text-xs text-slate-400 text-center py-4">No transactions recorded yet</p>
         ) : (
           <div className="divide-y divide-slate-50 dark:divide-neutral-800">
-            {transactions.slice(0, 4).map((tx, idx) => (
-              <motion.div
-                key={`${tx.id || 'tx'}-${idx}`}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.04 * idx, duration: 0.2 }}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleTxClick(tx)}
-                className="py-2.5 px-2 rounded-xl flex items-center justify-between hover:bg-slate-50 dark:hover:bg-neutral-900 transition-all cursor-pointer"
-                title="Tap to view or edit"
-              >
-                <div className="flex items-center space-x-3">
-                  <motion.div
-                    whileHover={{ scale: 1.15, rotate: 10 }}
-                    transition={{ type: "spring", stiffness: 400 }}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
-                      tx.type === 'Income'
-                        ? 'bg-emerald-100 text-emerald-600'
-                        : tx.type === 'Expense'
-                        ? 'bg-rose-100 text-rose-600'
-                        : 'bg-blue-100 text-blue-600'
-                    }`}
-                  >
-                    {tx.type === 'Income' && <ArrowDownLeft className="w-4 h-4" />}
-                    {tx.type === 'Expense' && <ArrowUpRight className="w-4 h-4" />}
-                    {tx.type === 'Payment' && <Handshake className="w-4 h-4" />}
-                  </motion.div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                      {tx.type === 'Expense'
-                        ? (tx.note || tx.category || tx.type)
-                        : tx.type === 'Income'
-                        ? (tx.note || tx.personName || tx.type)
-                        : (tx.personName || tx.category || tx.type)}
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      {tx.date} • {tx.paymentMethod}
-                      {tx.type === 'Expense' && tx.note && tx.category && ` • ${tx.category}`}
-                      {tx.type === 'Income' && tx.note && ` • ${tx.personName || 'Income'}`}
-                    </p>
-                  </div>
-                </div>
+            {transactions.slice(0, 4).map((tx, idx) => {
+              const isIncome = tx.type === 'Income';
+              const isExpense = tx.type === 'Expense';
+              const isPayment = tx.type === 'Payment';
+              const isPaid = isPayment && tx.paymentDirection === 'Paid';
+              const isReceived = isPayment && tx.paymentDirection === 'Received';
 
-                <div className="flex items-center space-x-2">
-                  <div className="text-right">
-                    <p
-                      className={`text-xs font-black ${
-                        tx.type === 'Income'
-                          ? 'text-emerald-600'
-                          : tx.type === 'Expense'
-                          ? 'text-rose-600'
-                          : 'text-blue-600'
-                      }`}
+              // Resolve Person Name and Type
+              let resolvedPersonName = (tx.personName || '').trim();
+              let resolvedPersonType = '';
+              if (tx.personId) {
+                const found = persons.find(p => p.id === tx.personId);
+                if (found) {
+                  resolvedPersonName = found.name || resolvedPersonName;
+                  resolvedPersonType = found.type;
+                }
+              }
+              if (!resolvedPersonType && resolvedPersonName) {
+                const found = persons.find(p => p.name && p.name.trim().toLowerCase() === resolvedPersonName.toLowerCase());
+                if (found) {
+                  resolvedPersonType = found.type;
+                  resolvedPersonName = found.name;
+                }
+              }
+              if ((!resolvedPersonName || !resolvedPersonType) && (tx.sourceId || tx.id)) {
+                const pay = payments.find(p => p.id === tx.sourceId || `tx_${p.id}` === tx.id);
+                if (pay) {
+                  if (!resolvedPersonName) resolvedPersonName = pay.personName || '';
+                  if (pay.personId) {
+                    const found = persons.find(p => p.id === pay.personId);
+                    if (found) {
+                      resolvedPersonName = found.name || resolvedPersonName;
+                      resolvedPersonType = found.type;
+                    }
+                  }
+                }
+              }
+
+              const iconBox = isIncome
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                : isExpense
+                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
+                : isPaid
+                ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/50'
+                : 'bg-teal-100 dark:bg-teal-900/70 text-teal-700 dark:text-teal-300 ring-1 ring-teal-400/50';
+
+              const amountColor = isIncome
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : isExpense
+                ? 'text-rose-600 dark:text-rose-400'
+                : isPaid
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-teal-600 dark:text-teal-400';
+
+              const amountSign = isExpense || isPaid ? '-' : '+';
+
+              const badgeClasses = isIncome
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200'
+                : isExpense
+                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200'
+                : isPaid
+                ? 'bg-amber-100/90 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold'
+                : 'bg-teal-100/90 dark:bg-teal-950/50 text-teal-900 dark:text-teal-200 border border-teal-300 dark:border-teal-700 font-bold';
+
+              const cardClasses = isPayment
+                ? isPaid
+                  ? 'bg-gradient-to-r from-amber-50/70 via-amber-50/30 to-transparent dark:from-amber-950/30 dark:via-neutral-900/40 dark:to-transparent border-amber-300/80 dark:border-amber-700/70 border-l-4 border-l-amber-500 hover:bg-amber-50/80'
+                  : 'bg-gradient-to-r from-teal-50/70 via-teal-50/30 to-transparent dark:from-teal-950/30 dark:via-neutral-900/40 dark:to-transparent border-teal-300/80 dark:border-teal-700/70 border-l-4 border-l-teal-500 hover:bg-teal-50/80'
+                : isExpense
+                ? 'border-transparent border-l-4 border-l-rose-500 hover:bg-slate-50 dark:hover:bg-neutral-900'
+                : 'border-transparent border-l-4 border-l-emerald-500 hover:bg-slate-50 dark:hover:bg-neutral-900';
+
+              return (
+                <motion.div
+                  key={`${tx.id || 'tx'}-${idx}`}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.04 * idx, duration: 0.2 }}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleTxClick(tx)}
+                  className={`py-2.5 px-3 rounded-xl flex items-center justify-between transition-all cursor-pointer border ${cardClasses}`}
+                  title="Tap to view or edit"
+                >
+                  <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                    <motion.div
+                      whileHover={{ scale: 1.15, rotate: 10 }}
+                      transition={{ type: "spring", stiffness: 400 }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-xs ${iconBox}`}
                     >
-                      {tx.type === 'Expense' ? '-' : '+'}
-                      {formatINR(tx.amount)}
-                    </p>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                      {tx.type}
-                    </span>
+                      {isIncome && <ArrowDownLeft className="w-4 h-4" />}
+                      {isExpense && <ArrowUpRight className="w-4 h-4" />}
+                      {isPayment && <Handshake className="w-4 h-4" />}
+                    </motion.div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-1.5 flex-wrap">
+                        {isPayment ? (
+                          <>
+                            <p className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
+                              {resolvedPersonName || tx.note || tx.category || 'Person Payment'}
+                            </p>
+                            {resolvedPersonType && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
+                                {resolvedPersonType}
+                              </span>
+                            )}
+                          </>
+                        ) : isExpense ? (
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                            {tx.note || tx.category || 'Expense'}
+                          </p>
+                        ) : (
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                            {tx.note || resolvedPersonName || 'Income'}
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                        {tx.date} • {tx.paymentMethod}
+                        {isPayment && (
+                          <span className={`font-semibold ml-1 ${isPaid ? 'text-amber-700 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                            • {isPaid ? 'Paid to Person' : 'Received'}
+                          </span>
+                        )}
+                        {tx.type === 'Expense' && tx.note && tx.category && ` • ${tx.category}`}
+                        {tx.type === 'Income' && tx.note && ` • ${resolvedPersonName || 'Income'}`}
+                      </p>
+                      {isPayment && (
+                        <div className="flex items-center space-x-1.5 text-[9.5px] mt-1 flex-wrap">
+                          <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold">
+                            <User className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
+                            <span className="truncate max-w-[120px]">{resolvedPersonName || 'Person'}</span>
+                          </span>
+                          {tx.category && (
+                            <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-white/90 dark:bg-neutral-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-medium">
+                              <Tag className="w-2.5 h-2.5 text-amber-600" />
+                              <span>{tx.category}</span>
+                            </span>
+                          )}
+                          {tx.note && (
+                            <span className="text-slate-500 dark:text-slate-400 truncate max-w-[120px] italic">
+                              "{tx.note}"
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.15, rotate: 6 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditFromDetail(tx);
-                    }}
-                    className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 shadow-2xs transition-all"
-                    title="Edit Record"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <div className="text-right">
+                      <p className={`text-xs font-black ${amountColor}`}>
+                        {amountSign}
+                        {formatINR(tx.amount)}
+                      </p>
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${badgeClasses}`}>
+                        {isPayment
+                          ? isPaid
+                            ? 'Paid'
+                            : isReceived
+                            ? 'Received'
+                            : 'Payment'
+                          : tx.type}
+                      </span>
+                    </div>
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.15, rotate: 6 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditFromDetail(tx);
+                      }}
+                      className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 shadow-2xs transition-all"
+                      title="Edit Record"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </motion.div>

@@ -78,9 +78,7 @@ export const PersonProfileModal: React.FC = () => {
     return personTransactions;
   }, [personTransactions, activeMetricTab]);
 
-  if (!person || !summary) return null;
-
-  const initials = (person.name || 'User')
+  const initials = (person?.name || 'User')
     .split(' ')
     .filter(Boolean)
     .map(w => w[0] || '')
@@ -89,7 +87,9 @@ export const PersonProfileModal: React.FC = () => {
     .toUpperCase() || 'U';
 
   const handleEdit = () => {
-    startEditItem({ type: 'person', data: person });
+    if (person) {
+      startEditItem({ type: 'person', data: person });
+    }
   };
 
   const handleDelete = () => {
@@ -111,13 +111,22 @@ export const PersonProfileModal: React.FC = () => {
     );
   };
 
-  const isEmployeeRole = person.type === 'Employee' || person.type === 'Staff' || person.type === 'Worker';
-  const hasSalaryStructure = isEmployeeRole || Boolean(person.salaryAmount && person.salaryAmount > 0);
+  const isEmployeeRole = person ? (person.type === 'Employee' || person.type === 'Staff' || person.type === 'Worker') : false;
+  const hasSalaryStructure = person ? (isEmployeeRole || Boolean(person.salaryAmount && person.salaryAmount > 0)) : false;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs">
-        <motion.div
+    <>
+      <AnimatePresence>
+        {person && summary && (
+          <motion.div
+            key="person-profile-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs"
+          >
+            <motion.div
+              key="person-profile-card"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -756,43 +765,51 @@ export const PersonProfileModal: React.FC = () => {
               )}
             </div>
           </div>
+          </motion.div>
         </motion.div>
-      </div>
+      )}
+    </AnimatePresence>
 
       {/* Fully Functional Leave Modal */}
-      <PersonLeaveModal
-        person={person}
-        isOpen={isLeaveModalOpen}
-        onClose={() => setIsLeaveModalOpen(false)}
-        onSaveLeave={(days, newStatus, start, end, leaveDates) => {
-          if (person) {
-            updatePersonLeave(person.id, days, newStatus, start, end, leaveDates);
-          }
-        }}
-      />
+      {person && (
+        <PersonLeaveModal
+          key="profile-leave-modal"
+          person={person}
+          isOpen={isLeaveModalOpen}
+          onClose={() => setIsLeaveModalOpen(false)}
+          onSaveLeave={(days, newStatus, start, end, leaveDates) => {
+            if (person) {
+              updatePersonLeave(person.id, days, newStatus, start, end, leaveDates);
+            }
+          }}
+        />
+      )}
 
       {/* Fully Functional Closed Modal */}
-      <PersonClosedModal
-        person={person}
-        summary={summary}
-        isOpen={isClosedModalOpen}
-        onClose={() => setIsClosedModalOpen(false)}
-        onCloseAccount={(date, reason) => {
-          if (person) {
-            updatePersonClosed(person.id, true, date, reason);
-          }
-        }}
-        onReopenAccount={() => {
-          if (person) {
-            updatePersonClosed(person.id, false);
-          }
-        }}
-        onSettleAndClose={() => {
-          if (person && summary.pendingAmount > 0) {
-            startSettlePaymentForPerson(person, summary);
-          }
-        }}
-      />
-    </AnimatePresence>
+      {person && summary && (
+        <PersonClosedModal
+          key="profile-closed-modal"
+          person={person}
+          summary={summary}
+          isOpen={isClosedModalOpen}
+          onClose={() => setIsClosedModalOpen(false)}
+          onCloseAccount={(date, reason) => {
+            if (person) {
+              updatePersonClosed(person.id, true, date, reason);
+            }
+          }}
+          onReopenAccount={() => {
+            if (person) {
+              updatePersonClosed(person.id, false);
+            }
+          }}
+          onSettleAndClose={() => {
+            if (person && summary.pendingAmount > 0) {
+              startSettlePaymentForPerson(person, summary);
+            }
+          }}
+        />
+      )}
+    </>
   );
 };

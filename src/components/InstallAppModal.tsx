@@ -23,8 +23,6 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
   const { isInstallable, isInstalled, isIOS, isAndroid, install } = usePWAInstall();
   const [installSuccess, setInstallSuccess] = useState(false);
 
-  if (!isOpen) return null;
-
   const handleInstallClick = async () => {
     if (isInstallable) {
       const success = await install();
@@ -39,12 +37,16 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
 
   return (
     <AnimatePresence>
-      <div
-        key="install-modal-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
-      >
+      {isOpen && (
         <motion.div
-          key="install-modal-dialog"
+          key="install-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
+        >
+          <motion.div
+            key="install-modal-dialog"
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -214,7 +216,8 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({ isOpen, onClos
             </button>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

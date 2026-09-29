@@ -73,8 +73,6 @@ export const ExpenseFormModal: React.FC = () => {
     }
   }, [isOpen, isEditing, editItem]);
 
-  if (!isOpen) return null;
-
   // Track modified fields
   const isAmountModified = isEditing && original && amount !== original.amount;
   const isCategoryModified = isEditing && original && category !== original.category;
@@ -125,8 +123,16 @@ export const ExpenseFormModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs">
+      {isOpen && (
         <motion.div
+          key="expense-form-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="expense-form-card"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -256,8 +262,8 @@ export const ExpenseFormModal: React.FC = () => {
                       : 'border-slate-200 text-slate-800 bg-white focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20'
                   }`}
                 >
-                  {categories.map(c => (
-                    <option key={c} value={c}>
+                  {categories.map((c, idx) => (
+                    <option key={`exp-cat-${c}-${idx}`} value={c}>
                       {c}
                     </option>
                   ))}
@@ -500,7 +506,8 @@ export const ExpenseFormModal: React.FC = () => {
             </div>
           </form>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

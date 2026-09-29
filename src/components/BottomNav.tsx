@@ -44,6 +44,7 @@ export const BottomNav: React.FC = () => {
       <AnimatePresence>
         {speedDialOpen && (
           <motion.div
+            key="speeddial-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -56,7 +57,10 @@ export const BottomNav: React.FC = () => {
       {/* Floating Speed Dial Actions */}
       <AnimatePresence>
         {speedDialOpen && (
-          <div className="absolute bottom-24 right-5 z-50 flex flex-col items-end space-y-3 pointer-events-auto">
+          <motion.div
+            key="speeddial-actions-container"
+            className="absolute bottom-24 right-5 z-50 flex flex-col items-end space-y-3 pointer-events-auto"
+          >
             {/* Add Income */}
             <motion.div
               initial={{ opacity: 0, y: 15, scale: 0.8 }}
@@ -160,7 +164,7 @@ export const BottomNav: React.FC = () => {
                 <UserPlus className="w-5 h-5" />
               </motion.button>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

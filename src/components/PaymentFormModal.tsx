@@ -54,8 +54,6 @@ export const PaymentFormModal: React.FC = () => {
     }
   }, [isOpen, isExistingRecord, isPrefill, editItem, persons]);
 
-  if (!isOpen) return null;
-
   // Track modified fields
   const isAmountModified = isEditing && original && amount !== original.amount;
   const isPersonModified = isEditing && original && personId !== original.personId;
@@ -100,8 +98,16 @@ export const PaymentFormModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs">
+      {isOpen && (
         <motion.div
+          key="payment-form-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="payment-form-card"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -476,7 +482,8 @@ export const PaymentFormModal: React.FC = () => {
             </div>
           </form>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

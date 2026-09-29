@@ -28,6 +28,7 @@ export const DailyView: React.FC = () => {
     income,
     expenses,
     payments,
+    persons,
     transactions,
     openQuickAction,
     startEditItem,
@@ -374,93 +375,196 @@ export const DailyView: React.FC = () => {
           ) : (
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
-                {dayTransactions.map((tx, idx) => (
-                  <motion.div
-                    key={`${tx.id || 'daily-tx'}-${idx}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: Math.min(0.3, idx * 0.04), duration: 0.2 }}
-                    whileHover={{ x: 3 }}
-                    className="bg-white dark:bg-black rounded-2xl p-3.5 border border-slate-100 dark:border-neutral-800 shadow-xs flex items-center justify-between hover:bg-slate-50 dark:hover:bg-neutral-900 hover:border-slate-200 dark:hover:border-neutral-700 transition-all"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <motion.div
-                        whileHover={{ scale: 1.15, rotate: 10 }}
-                        transition={{ type: "spring", stiffness: 400 }}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
-                          tx.type === 'Income'
-                            ? 'bg-emerald-100 text-emerald-600'
-                            : tx.type === 'Expense'
-                            ? 'bg-rose-100 text-rose-600'
-                            : 'bg-blue-100 text-blue-600'
-                        }`}
-                      >
-                        {tx.type === 'Income' && <ArrowDownLeft className="w-5 h-5" />}
-                        {tx.type === 'Expense' && <ArrowUpRight className="w-5 h-5" />}
-                        {tx.type === 'Payment' && <Handshake className="w-5 h-5" />}
-                      </motion.div>
+                {dayTransactions.map((tx, idx) => {
+                  const isIncome = tx.type === 'Income';
+                  const isExpense = tx.type === 'Expense';
+                  const isPayment = tx.type === 'Payment';
+                  const isPaid = isPayment && tx.paymentDirection === 'Paid';
 
-                      <div>
-                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                          {tx.type === 'Expense'
-                            ? (tx.note || tx.category || tx.type)
-                            : tx.type === 'Income'
-                            ? (tx.note || tx.personName || tx.type)
-                            : (tx.personName || tx.category || tx.type)}
-                        </h5>
-                        <div className="flex items-center space-x-2 text-[10px] text-slate-400 mt-0.5">
-                          <span>{tx.time || '12:00'}</span>
-                          <span>•</span>
-                          <span className="font-medium text-slate-600 dark:text-slate-300">{tx.paymentMethod}</span>
-                          {tx.paymentDirection && (
-                            <span className="text-blue-600 font-bold">({tx.paymentDirection})</span>
+                  // Resolve person name and type
+                  let resolvedPersonName = (tx.personName || '').trim();
+                  let resolvedPersonType = '';
+                  if (tx.personId) {
+                    const found = persons.find(p => p.id === tx.personId);
+                    if (found) {
+                      resolvedPersonName = found.name || resolvedPersonName;
+                      resolvedPersonType = found.type;
+                    }
+                  }
+                  if (!resolvedPersonType && resolvedPersonName) {
+                    const found = persons.find(p => p.name && p.name.trim().toLowerCase() === resolvedPersonName.toLowerCase());
+                    if (found) {
+                      resolvedPersonType = found.type;
+                      resolvedPersonName = found.name;
+                    }
+                  }
+                  if ((!resolvedPersonName || !resolvedPersonType) && (tx.sourceId || tx.id)) {
+                    const pay = payments.find(p => p.id === tx.sourceId || `tx_${p.id}` === tx.id);
+                    if (pay) {
+                      if (!resolvedPersonName) resolvedPersonName = pay.personName || '';
+                      if (pay.personId) {
+                        const found = persons.find(p => p.id === pay.personId);
+                        if (found) {
+                          resolvedPersonName = found.name || resolvedPersonName;
+                          resolvedPersonType = found.type;
+                        }
+                      }
+                    }
+                  }
+
+                  const cardClasses = isPayment
+                    ? isPaid
+                      ? 'bg-gradient-to-r from-amber-50/70 via-amber-50/30 to-white dark:from-amber-950/30 dark:via-neutral-900 dark:to-black border-amber-300/90 dark:border-amber-700/80 border-l-4 border-l-amber-500 hover:border-amber-400 hover:bg-amber-50/80 dark:hover:bg-amber-950/50 shadow-xs'
+                      : 'bg-gradient-to-r from-teal-50/70 via-teal-50/30 to-white dark:from-teal-950/30 dark:via-neutral-900 dark:to-black border-teal-300/90 dark:border-teal-700/80 border-l-4 border-l-teal-500 hover:border-teal-400 hover:bg-teal-50/80 dark:hover:bg-teal-950/50 shadow-xs'
+                    : isExpense
+                    ? 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-rose-500 hover:border-rose-300 hover:bg-rose-50/10 shadow-xs'
+                    : 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-emerald-500 hover:border-emerald-300 hover:bg-emerald-50/10 shadow-xs';
+
+                  const iconBoxClasses = isIncome
+                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-300/40'
+                    : isExpense
+                    ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 ring-1 ring-rose-300/40'
+                    : isPaid
+                    ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-300 ring-2 ring-amber-400/50'
+                    : 'bg-teal-100 dark:bg-teal-900/70 text-teal-700 dark:text-teal-300 ring-2 ring-teal-400/50';
+
+                  const amountColor = isIncome
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : isExpense
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : isPaid
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-teal-600 dark:text-teal-400';
+
+                  const amountSign = isExpense || isPaid ? '-' : '+';
+
+                  return (
+                    <motion.div
+                      key={`${tx.id || 'daily-tx'}-${idx}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: Math.min(0.3, idx * 0.04), duration: 0.2 }}
+                      whileHover={{ x: 3 }}
+                      className={`rounded-2xl p-3.5 border flex items-center justify-between transition-all ${cardClasses}`}
+                    >
+                      <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                        <motion.div
+                          whileHover={{ scale: 1.15, rotate: 10 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${iconBoxClasses}`}
+                        >
+                          {isIncome && <ArrowDownLeft className="w-5 h-5" />}
+                          {isExpense && <ArrowUpRight className="w-5 h-5" />}
+                          {isPayment && <Handshake className="w-5 h-5" />}
+                        </motion.div>
+
+                        <div className="min-w-0 flex-1">
+                          {/* Title */}
+                          <div className="flex items-center space-x-1.5 flex-wrap">
+                            {isPayment ? (
+                              <>
+                                <h5 className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
+                                  {resolvedPersonName || tx.note || tx.category || 'Person Payment'}
+                                </h5>
+                                {resolvedPersonType && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
+                                    {resolvedPersonType}
+                                  </span>
+                                )}
+                              </>
+                            ) : isExpense ? (
+                              <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                {tx.note || tx.category || 'Expense'}
+                              </h5>
+                            ) : (
+                              <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                {tx.note || resolvedPersonName || 'Income'}
+                              </h5>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-2 text-[10px] text-slate-400 mt-0.5">
+                            <span>{tx.time || '12:00'}</span>
+                            <span>•</span>
+                            <span className="font-medium text-slate-600 dark:text-slate-300">{tx.paymentMethod}</span>
+                            {isPayment && tx.paymentDirection && (
+                              <>
+                                <span>•</span>
+                                <span className={`font-bold ${isPaid ? 'text-amber-700 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                                  {isPaid ? 'Paid to Person' : 'Received from Person'}
+                                </span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Details row */}
+                          {isPayment ? (
+                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
+                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/70 font-bold shadow-2xs">
+                                <User className="w-3 h-3 text-amber-700 dark:text-amber-400 shrink-0" />
+                                <span className="truncate max-w-[130px]">{resolvedPersonName || 'Person'}</span>
+                              </span>
+                              {tx.category && (
+                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-white/90 dark:bg-neutral-800 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-semibold">
+                                  <Tag className="w-3 h-3 text-amber-600 shrink-0" />
+                                  <span>{tx.category}</span>
+                                </span>
+                              )}
+                              {tx.note && (
+                                <span className="text-slate-600 dark:text-slate-300 truncate max-w-[140px] italic">
+                                  "{tx.note}"
+                                </span>
+                              )}
+                            </div>
+                          ) : isExpense ? (
+                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
+                              {tx.category && (
+                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 font-medium">
+                                  <Tag className="w-3 h-3 text-rose-500 shrink-0" />
+                                  <span className="truncate max-w-[130px]">{tx.category}</span>
+                                </span>
+                              )}
+                              {resolvedPersonName && (
+                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 font-medium">
+                                  <User className="w-3 h-3 text-slate-500 shrink-0" />
+                                  <span className="truncate max-w-[120px]">{resolvedPersonName}</span>
+                                </span>
+                              )}
+                              {tx.note && tx.category && (
+                                <span className="text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
+                                  {tx.note}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
+                              {resolvedPersonName ? (
+                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/40 font-medium">
+                                  <User className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span className="truncate max-w-[130px]">{resolvedPersonName}</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/40 font-medium">
+                                  <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  <span>Income</span>
+                                </span>
+                              )}
+                              {tx.note && (
+                                <span className="text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
+                                  {tx.note}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
-                        {tx.type === 'Expense' ? (
-                          tx.note && tx.category ? (
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate max-w-[180px] flex items-center space-x-1">
-                              <Tag className="w-3 h-3 text-rose-500 shrink-0" />
-                              <span className="font-medium">{tx.category}</span>
-                            </p>
-                          ) : null
-                        ) : tx.type === 'Income' ? (
-                          tx.note ? (
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate max-w-[180px] flex items-center space-x-1">
-                              {tx.personName ? (
-                                <>
-                                  <User className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span className="font-medium">{tx.personName}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span className="font-medium">Income</span>
-                                </>
-                              )}
-                            </p>
-                          ) : null
-                        ) : (
-                          tx.note && (
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate max-w-[180px]">{tx.note}</p>
-                          )
-                        )}
                       </div>
-                    </div>
 
-                    <div className="text-right shrink-0">
-                      <p
-                        className={`text-sm font-black tracking-tight ${
-                          tx.type === 'Income'
-                            ? 'text-emerald-600'
-                            : tx.type === 'Expense'
-                            ? 'text-rose-600'
-                            : 'text-blue-600'
-                        }`}
-                      >
-                        {tx.type === 'Expense' ? '-' : '+'}
-                        {formatINR(tx.amount)}
-                      </p>
+                      <div className="text-right shrink-0">
+                        <p className={`text-sm font-black tracking-tight ${amountColor}`}>
+                          {amountSign}
+                          {formatINR(tx.amount)}
+                        </p>
 
                       <div className="flex items-center justify-end space-x-1.5 mt-1.5">
                         <motion.button
@@ -486,8 +590,9 @@ export const DailyView: React.FC = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </AnimatePresence>
+                );
+              })}
+            </AnimatePresence>
             </div>
           )}
         </div>

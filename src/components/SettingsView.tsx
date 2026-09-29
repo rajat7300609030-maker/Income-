@@ -795,6 +795,7 @@ export const SettingsView: React.FC = () => {
         <AnimatePresence>
           {isEditingProfile && (
             <motion.form
+              key="edit-profile-form"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -1623,8 +1624,15 @@ export const SettingsView: React.FC = () => {
       {/* Forgot Password Modal (Fully Functional Multi-Step Recovery) */}
       <AnimatePresence>
         {isForgotPasswordOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm">
+          <motion.div
+            key="forgot-password-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm"
+          >
             <motion.div
+              key="forgot-password-card"
               initial={{ scale: 0.9, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 15 }}
@@ -1829,7 +1837,7 @@ export const SettingsView: React.FC = () => {
                 </div>
               )}
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

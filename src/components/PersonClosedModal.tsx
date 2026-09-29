@@ -34,10 +34,8 @@ export const PersonClosedModal: React.FC<PersonClosedModalProps> = ({
     }
   }, [person, isOpen]);
 
-  if (!isOpen || !person || !summary) return null;
-
-  const isAlreadyClosed = person.status === 'Closed';
-  const hasPending = summary.pendingAmount > 0;
+  const isAlreadyClosed = person?.status === 'Closed';
+  const hasPending = summary ? summary.pendingAmount > 0 : false;
 
   const handleClose = () => {
     onCloseAccount(closedDate || todayStr, closedReason);
@@ -51,12 +49,16 @@ export const PersonClosedModal: React.FC<PersonClosedModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div
-        key="person-closed-modal-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
-      >
+      {isOpen && person && summary && (
         <motion.div
-          key="person-closed-modal-card"
+          key="person-closed-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="person-closed-modal-card"
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -229,7 +231,8 @@ export const PersonClosedModal: React.FC<PersonClosedModalProps> = ({
             </div>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

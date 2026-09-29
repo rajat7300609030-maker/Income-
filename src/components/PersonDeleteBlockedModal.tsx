@@ -11,28 +11,30 @@ export const PersonDeleteBlockedModal: React.FC = () => {
     startSettlePaymentForPerson,
   } = useApp();
 
-  if (!personDeleteBlocked?.isOpen || !personDeleteBlocked.person || !personDeleteBlocked.summary) {
-    return null;
-  }
-
-  const { person, summary } = personDeleteBlocked;
-  const isToReceive = summary.status === 'to_receive';
-  const isEmployee = ['Employee', 'Staff', 'Worker'].includes(person.type) || Boolean(person.salaryAmount && person.salaryAmount > 0);
+  const isOpen = Boolean(personDeleteBlocked?.isOpen && personDeleteBlocked?.person && personDeleteBlocked?.summary);
+  const person = personDeleteBlocked?.person;
+  const summary = personDeleteBlocked?.summary;
+  const isToReceive = summary?.status === 'to_receive';
+  const isEmployee = person ? (['Employee', 'Staff', 'Worker'].includes(person.type) || Boolean(person.salaryAmount && person.salaryAmount > 0)) : false;
 
   return (
     <AnimatePresence>
-      <div
-        key="person-delete-blocked-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
-      >
+      {isOpen && person && summary && (
         <motion.div
-          key="person-delete-blocked-card"
-          initial={{ opacity: 0, scale: 0.92, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 15 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-rose-100 flex flex-col items-center text-center relative overflow-hidden"
+          key="person-delete-blocked-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs"
         >
+          <motion.div
+            key="person-delete-blocked-card"
+            initial={{ opacity: 0, scale: 0.92, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 15 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-rose-100 flex flex-col items-center text-center relative overflow-hidden"
+          >
           {/* Subtle Ambient Red Glow */}
           <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-rose-500/10 blur-2xl pointer-events-none" />
           <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-amber-500/10 blur-2xl pointer-events-none" />
@@ -130,7 +132,8 @@ export const PersonDeleteBlockedModal: React.FC = () => {
             </motion.button>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

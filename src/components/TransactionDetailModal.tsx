@@ -20,6 +20,7 @@ import {
   Play,
 } from 'lucide-react';
 import { Transaction } from '../types';
+import { useApp } from '../context/AppContext';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -36,6 +37,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { persons } = useApp();
   const [secondsRemaining, setSecondsRemaining] = useState<number>(5);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [copiedRef, setCopiedRef] = useState<boolean>(false);
@@ -93,38 +95,44 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     setTimeout(() => setCopiedRef(false), 2000);
   };
 
-  if (!isOpen || !transaction) return null;
+  const isIncome = transaction?.type === 'Income';
+  const isExpense = transaction?.type === 'Expense';
+  const isPayment = transaction?.type === 'Payment';
+  const isPaid = isPayment && transaction?.paymentDirection === 'Paid';
 
-  const isIncome = transaction.type === 'Income';
-  const isExpense = transaction.type === 'Expense';
-  const isPayment = transaction.type === 'Payment';
+  // Resolve Person Name
+  const resolvedPersonName = transaction?.personName || (transaction?.personId && persons.find(p => p.id === transaction.personId)?.name) || '';
 
   const typeColor = isIncome
-    ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    ? 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
     : isExpense
-    ? 'text-rose-600 bg-rose-50 border-rose-200'
-    : 'text-blue-600 bg-blue-50 border-blue-200';
+    ? 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+    : 'text-amber-800 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60';
 
   const bannerGradient = isIncome
     ? 'from-emerald-500 via-emerald-600 to-teal-600'
     : isExpense
     ? 'from-rose-500 via-rose-600 to-pink-600'
-    : 'from-blue-600 via-indigo-600 to-cyan-600';
+    : 'from-amber-500 via-amber-600 to-orange-600';
 
   return (
     <AnimatePresence>
-      <div
-        key="transaction-detail-backdrop"
-        id="transaction-detail-backdrop"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md transition-all"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
+      {isOpen && transaction && (
         <motion.div
-          key="transaction-detail-floating-card"
+          key="transaction-detail-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          id="transaction-detail-backdrop"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md transition-all"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+        >
+          <motion.div
+            key="transaction-detail-floating-card"
           id="transaction-detail-floating-card"
           initial={{ opacity: 0, scale: 0.88, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -139,7 +147,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               animate={{ width: '0%' }}
               transition={{ duration: 5, ease: 'linear' }}
               className={`h-full ${
-                isIncome ? 'bg-emerald-500' : isExpense ? 'bg-rose-500' : 'bg-blue-600'
+                isIncome ? 'bg-emerald-500' : isExpense ? 'bg-rose-500' : 'bg-amber-500'
               }`}
             />
           </div>
@@ -181,7 +189,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             <div className="mt-3">
               <p className="text-[11px] text-white/80 font-medium">Transaction Amount</p>
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-xs">
-                {isExpense ? '-' : '+'}
+                {isExpense || isPaid ? '-' : '+'}
                 {formatINR(transaction.amount)}
               </h2>
             </div>
@@ -190,20 +198,24 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           {/* Full Transaction Details Body */}
           <div className="p-5 space-y-3.5 max-h-[60vh] overflow-y-auto">
             {/* Person / Party Name */}
-            {transaction.personName && (
+            {resolvedPersonName && (
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                    isPayment ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400' : 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                  }`}>
                     <User className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                       Party / Person
                     </p>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.personName}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{resolvedPersonName}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg ${
+                  isPayment ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60' : 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40'
+                }`}>
                   Account Ledger
                 </span>
               </div>
@@ -350,7 +362,8 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             </motion.button>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };

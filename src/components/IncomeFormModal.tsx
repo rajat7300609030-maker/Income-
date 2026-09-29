@@ -48,8 +48,6 @@ export const IncomeFormModal: React.FC = () => {
     }
   }, [isOpen, isEditing, editItem]);
 
-  if (!isOpen) return null;
-
   // Track modified fields
   const isAmountModified = isEditing && original && amount !== original.amount;
   const isPersonModified = isEditing && original && personId !== original.personId;
@@ -89,8 +87,16 @@ export const IncomeFormModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs">
+      {isOpen && (
         <motion.div
+          key="income-form-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs"
+        >
+          <motion.div
+            key="income-form-card"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
@@ -376,7 +382,8 @@ export const IncomeFormModal: React.FC = () => {
             </div>
           </form>
         </motion.div>
-      </div>
-    </AnimatePresence>
+      </motion.div>
+    )}
+  </AnimatePresence>
   );
 };
