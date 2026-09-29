@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowUpRight, Check, Calendar, User, Tag, Sparkles, AlertCircle } from 'lucide-react';
+import { X, ArrowUpRight, Check, Calendar, User, Tag, Sparkles, AlertCircle, Handshake } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PaymentMethod, ExpenseRecord } from '../types';
 
 export const ExpenseFormModal: React.FC = () => {
-  const { activeModal, closeQuickAction, saveExpense, persons, editItem } = useApp();
+  const { activeModal, closeQuickAction, saveExpense, savePayment, deleteExpense, persons, editItem } = useApp();
 
   const isOpen = activeModal === 'add_expense';
   const isEditing = editItem?.type === 'expense' && editItem.data;
@@ -105,18 +105,39 @@ export const ExpenseFormModal: React.FC = () => {
 
     const matchedPerson = persons.find(p => p.id === personId);
 
-    saveExpense(
-      {
-        category,
-        personId: personId || undefined,
-        personName: matchedPerson?.name || (isEditing && personId === original?.personId ? editItem.data.personName : undefined),
-        amount: parsedAmount,
-        date,
-        paymentMethod,
-        description: description.trim(),
-      },
-      isEditing ? editItem.data.id : undefined
-    );
+    if (matchedPerson) {
+      // User requirement: When a person is selected in Add Expense,
+      // the entry must be saved directly under that person's Payment (Paid)
+      if (isEditing && editItem?.type === 'expense' && editItem?.data?.id) {
+        deleteExpense(editItem.data.id);
+      }
+
+      savePayment(
+        {
+          personId: matchedPerson.id,
+          personName: matchedPerson.name,
+          amount: parsedAmount,
+          date,
+          type: 'Paid',
+          paymentMethod,
+          category: category || 'Expense Payment',
+          note: description.trim(),
+        },
+        isEditing && editItem?.type === 'payment' ? editItem.data.id : undefined
+      );
+    } else {
+      // General expense without specific person (General Overhead, utilities, etc.)
+      saveExpense(
+        {
+          category,
+          amount: parsedAmount,
+          date,
+          paymentMethod,
+          description: description.trim(),
+        },
+        isEditing ? editItem.data.id : undefined
+      );
+    }
   };
 
   const paymentMethods: PaymentMethod[] = ['UPI', 'Cash', 'Bank', 'Other'];
@@ -318,6 +339,21 @@ export const ExpenseFormModal: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Informative notification when a person is selected */}
+              {Boolean(personId) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-amber-950 dark:text-amber-200 text-xs flex items-center space-x-2"
+                >
+                  <Handshake className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <div className="leading-tight">
+                    <span className="font-extrabold text-amber-900 dark:text-amber-100">Person Selected: </span>
+                    Ye entry person ke <span className="font-bold underline text-amber-800 dark:text-amber-300">Payment (Paid)</span> me add ho kar show hogi.
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Date */}
@@ -491,15 +527,21 @@ export const ExpenseFormModal: React.FC = () => {
                 className={`w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all flex items-center justify-center space-x-2 ${
                   isEditing && totalModifications > 0
                     ? 'bg-gradient-to-r from-violet-700 to-indigo-600 shadow-violet-600/30 hover:from-violet-800 hover:to-indigo-700'
+                    : personId
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 shadow-amber-600/30 hover:from-amber-600 hover:to-orange-700'
                     : 'bg-gradient-to-r from-rose-600 to-rose-500 shadow-rose-600/30 hover:from-rose-700 hover:to-rose-600'
                 }`}
               >
-                <Check className="w-4 h-4" />
+                {personId ? <Handshake className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                 <span>
                   {isEditing
                     ? totalModifications > 0
-                      ? `Update Expense (${totalModifications} Changes)`
+                      ? `Update Entry (${totalModifications} Changes)`
+                      : personId
+                      ? 'Update Person Payment'
                       : 'Update Expense'
+                    : personId
+                    ? 'Save to Person Payment (Paid)'
                     : 'Save Expense'}
                 </span>
               </motion.button>

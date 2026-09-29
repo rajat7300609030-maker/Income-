@@ -149,8 +149,6 @@ export const INITIAL_EXPENSES: ExpenseRecord[] = [
   {
     id: 'exp_1',
     userId: 'user_default_rajat',
-    personId: 'per_4',
-    personName: 'Sharma Cloud Servers',
     category: 'Hosting & Servers',
     amount: 6800,
     date: TODAY,
@@ -169,19 +167,6 @@ export const INITIAL_EXPENSES: ExpenseRecord[] = [
     description: 'High-speed internet & tea pantry supplies',
     createdAt: TODAY + 'T11:20:00Z',
     updatedAt: TODAY + 'T11:20:00Z',
-  },
-  {
-    id: 'exp_3',
-    userId: 'user_default_rajat',
-    personId: 'per_3',
-    personName: 'Ramesh Kumar',
-    category: 'Salary & Allowances',
-    amount: 25000,
-    date: YESTERDAY,
-    paymentMethod: 'Bank',
-    description: 'Mid-month performance allowance & advance',
-    createdAt: YESTERDAY + 'T16:00:00Z',
-    updatedAt: YESTERDAY + 'T16:00:00Z',
   },
 ];
 
@@ -215,6 +200,21 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     note: 'Settlement of pending bonus balance',
     createdAt: TWO_DAYS_AGO + 'T15:30:00Z',
     updatedAt: TWO_DAYS_AGO + 'T15:30:00Z',
+  },
+  {
+    id: 'pay_3',
+    userId: 'user_default_rajat',
+    personId: 'per_3',
+    personName: 'Ramesh Kumar',
+    amount: 25000,
+    date: YESTERDAY,
+    type: 'Paid',
+    paymentMethod: 'Bank',
+    category: 'Salary & Allowances',
+    referenceNumber: 'NEFT-HDFC-9938211',
+    note: 'Mid-month performance allowance & advance',
+    createdAt: YESTERDAY + 'T16:00:00Z',
+    updatedAt: YESTERDAY + 'T16:00:00Z',
   },
 ];
 
@@ -461,16 +461,60 @@ export class LocalStorageManager {
 
   static getExpenses(): ExpenseRecord[] {
     const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_EXPENSES;
-    return this.deduplicateById(this.get<ExpenseRecord[]>(STORAGE_KEYS.EXPENSES, defaultData));
+    const raw = this.get<ExpenseRecord[]>(STORAGE_KEYS.EXPENSES, defaultData);
+    // Ensure expenses do not contain person payments - filter out any legacy person-associated records
+    const cleanExpenses = this.deduplicateById(raw).filter(e => !e.personId);
+    return cleanExpenses;
   }
 
   static setExpenses(expenses: ExpenseRecord[]): void {
-    this.set(STORAGE_KEYS.EXPENSES, this.deduplicateById(expenses));
+    // Only pure non-person expenses should be saved in expenses
+    const cleanExpenses = (expenses || []).filter(e => !e.personId);
+    this.set(STORAGE_KEYS.EXPENSES, this.deduplicateById(cleanExpenses));
   }
 
   static getPayments(): PaymentRecord[] {
     const defaultData = (this.hasBeenReset() || this.isInitialized()) ? [] : INITIAL_PAYMENTS;
-    return this.deduplicateById(this.get<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, defaultData));
+    const raw = this.deduplicateById(this.get<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, defaultData));
+
+    // One-time automatic migration: if there are any legacy expenses with personId, migrate them to payments
+    try {
+      const storedExp = this.get<ExpenseRecord[]>(STORAGE_KEYS.EXPENSES, []);
+      const personExpenses = storedExp.filter(e => Boolean(e.personId));
+      if (personExpenses.length > 0) {
+        let changed = false;
+        personExpenses.forEach(pe => {
+          const exists = raw.some(p => p.id === pe.id || p.id === `pay_${pe.id}` || (p.personId === pe.personId && p.amount === pe.amount && p.date === pe.date));
+          if (!exists) {
+            raw.push({
+              id: `pay_${pe.id}`,
+              userId: pe.userId,
+              personId: pe.personId!,
+              personName: pe.personName,
+              amount: pe.amount,
+              date: pe.date,
+              type: 'Paid',
+              paymentMethod: pe.paymentMethod || 'Cash',
+              category: pe.category || 'Salary & Allowances',
+              note: pe.description || '',
+              createdAt: pe.createdAt || new Date().toISOString(),
+              updatedAt: pe.updatedAt || new Date().toISOString(),
+            });
+            changed = true;
+          }
+        });
+        // Clear them from stored expenses
+        const cleanExpenses = storedExp.filter(e => !e.personId);
+        this.set(STORAGE_KEYS.EXPENSES, cleanExpenses);
+        if (changed) {
+          this.set(STORAGE_KEYS.PAYMENTS, raw);
+        }
+      }
+    } catch (err) {
+      console.warn('Auto-migration warning:', err);
+    }
+
+    return raw;
   }
 
   static setPayments(payments: PaymentRecord[]): void {

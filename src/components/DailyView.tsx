@@ -413,9 +413,7 @@ export const DailyView: React.FC = () => {
                   }
 
                   const cardClasses = isPayment
-                    ? isPaid
-                      ? 'bg-gradient-to-r from-amber-50/70 via-amber-50/30 to-white dark:from-amber-950/30 dark:via-neutral-900 dark:to-black border-amber-300/90 dark:border-amber-700/80 border-l-4 border-l-amber-500 hover:border-amber-400 hover:bg-amber-50/80 dark:hover:bg-amber-950/50 shadow-xs'
-                      : 'bg-gradient-to-r from-teal-50/70 via-teal-50/30 to-white dark:from-teal-950/30 dark:via-neutral-900 dark:to-black border-teal-300/90 dark:border-teal-700/80 border-l-4 border-l-teal-500 hover:border-teal-400 hover:bg-teal-50/80 dark:hover:bg-teal-950/50 shadow-xs'
+                    ? 'bg-gradient-to-r from-amber-50/90 via-amber-50/50 to-white dark:from-amber-950/40 dark:via-neutral-900 dark:to-black border-amber-300 dark:border-amber-700/80 border-l-4 border-l-amber-500 hover:border-amber-400 hover:bg-amber-50/80 dark:hover:bg-amber-950/60 shadow-xs shadow-amber-500/10'
                     : isExpense
                     ? 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-rose-500 hover:border-rose-300 hover:bg-rose-50/10 shadow-xs'
                     : 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-emerald-500 hover:border-emerald-300 hover:bg-emerald-50/10 shadow-xs';
@@ -424,17 +422,13 @@ export const DailyView: React.FC = () => {
                     ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-300/40'
                     : isExpense
                     ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 ring-1 ring-rose-300/40'
-                    : isPaid
-                    ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-700 dark:text-amber-300 ring-2 ring-amber-400/50'
-                    : 'bg-teal-100 dark:bg-teal-900/70 text-teal-700 dark:text-teal-300 ring-2 ring-teal-400/50';
+                    : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 ring-2 ring-amber-400/50';
 
                   const amountColor = isIncome
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : isExpense
                     ? 'text-rose-600 dark:text-rose-400'
-                    : isPaid
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-teal-600 dark:text-teal-400';
+                    : 'text-amber-600 dark:text-amber-400';
 
                   const amountSign = isExpense || isPaid ? '-' : '+';
 
@@ -491,7 +485,7 @@ export const DailyView: React.FC = () => {
                             {isPayment && tx.paymentDirection && (
                               <>
                                 <span>•</span>
-                                <span className={`font-bold ${isPaid ? 'text-amber-700 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                                <span className="font-bold text-amber-700 dark:text-amber-400">
                                   {isPaid ? 'Paid to Person' : 'Received from Person'}
                                 </span>
                               </>
@@ -565,6 +559,16 @@ export const DailyView: React.FC = () => {
                           {amountSign}
                           {formatINR(tx.amount)}
                         </p>
+
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${
+                          isIncome
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60'
+                            : isExpense
+                            ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60'
+                            : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-xs font-bold border border-amber-400/50'
+                        }`}>
+                          {isPayment ? (isPaid ? 'Payment (Paid)' : 'Payment (Recv)') : tx.type}
+                        </span>
 
                       <div className="flex items-center justify-end space-x-1.5 mt-1.5">
                         <motion.button
