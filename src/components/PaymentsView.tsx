@@ -103,11 +103,11 @@ export const PaymentsView: React.FC = () => {
           </motion.button>
         </div>
 
-        {/* Top Summary: Current Net Balance & Current Pending Amount */}
+        {/* Top Summary: Net Balance & Pending Amount */}
         <div className="grid grid-cols-2 gap-2.5 mb-3">
-          {/* Card 1: Current Net Balance (previously Total Received) */}
+          {/* Card 1: Net Balance (previously Total Received) */}
           <motion.div
-            id="payments-current-net-balance-card"
+            id="payments-net-balance-card"
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab(activeTab === 'Received' ? 'All' : 'Received')}
@@ -116,11 +116,11 @@ export const PaymentsView: React.FC = () => {
                 ? 'bg-emerald-50 dark:bg-black border-emerald-300 dark:border-emerald-500/50 ring-2 ring-emerald-500/20 shadow-xs'
                 : 'bg-emerald-50/70 dark:bg-black border-emerald-200/90 dark:border-neutral-800 hover:bg-emerald-100/60 dark:hover:bg-neutral-900 shadow-xs'
             }`}
-            title="Current Net Balance (Tap to filter Received)"
+            title="Net Balance (Tap to filter Received)"
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
-                Current Net Balance
+                Net Balance
               </span>
               <motion.div
                 whileHover={{ scale: 1.25, rotate: 12 }}
@@ -142,9 +142,9 @@ export const PaymentsView: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Card 2: Current Pending Amount */}
+          {/* Card 2: Pending Amount */}
           <motion.div
-            id="payments-current-pending-card"
+            id="payments-pending-card"
             whileHover={{ y: -2, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setCurrentView('persons')}
@@ -153,7 +153,7 @@ export const PaymentsView: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-wider">
-                Current Pending Amount
+                Pending Amount
               </span>
               <motion.div
                 whileHover={{ scale: 1.25 }}

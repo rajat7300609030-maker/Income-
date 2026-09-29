@@ -413,7 +413,7 @@ export const DashboardView: React.FC = () => {
               </p>
               <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-cyan-200/90 dark:text-cyan-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 inline-block shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
-                <span className="truncate">Bank & UPI (No Expense)</span>
+                <span className="truncate">Bank & UPI</span>
               </div>
             </motion.div>
 
@@ -449,7 +449,7 @@ export const DashboardView: React.FC = () => {
               </p>
               <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-emerald-200/90 dark:text-emerald-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 inline-block shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
-                <span className="truncate">Cash Received (No Expense)</span>
+                <span className="truncate">Cash Received</span>
               </div>
             </motion.div>
           </div>
