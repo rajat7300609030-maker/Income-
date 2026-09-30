@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowUpRight, Check, Calendar, User, Tag, Sparkles, AlertCircle, Handshake } from 'lucide-react';
+import { X, ArrowUpRight, Check, Calendar, User, Sparkles, AlertCircle, Handshake } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { PaymentMethod, ExpenseRecord } from '../types';
+import { PaymentMethod, ExpenseRecord, PAYMENT_METHODS, PAYMENT_METHOD_CONFIGS } from '../types';
 
 export const ExpenseFormModal: React.FC = () => {
   const { activeModal, closeQuickAction, saveExpense, savePayment, deleteExpense, persons, editItem } = useApp();
@@ -10,7 +10,7 @@ export const ExpenseFormModal: React.FC = () => {
   const isOpen = activeModal === 'add_expense';
   const isEditing = editItem?.type === 'expense' && editItem.data;
 
-  const [category, setCategory] = useState('School & College');
+  const [category, setCategory] = useState('General Expense');
   const [personId, setPersonId] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -18,31 +18,14 @@ export const ExpenseFormModal: React.FC = () => {
   const [description, setDescription] = useState('');
   const [noteError, setNoteError] = useState('');
 
-  const baseCategories = [
-    'General Overhead',
-    'School & College',
-    'Home',
-    'Salary & pension',
-    'Salary & Allowances',
-    'Other Expense',
-  ];
-
-  const isGeneralOverhead = category.trim().toLowerCase().includes('overhead') || category === 'General Overhead';
-
-  // Keep dropdown options with requested categories plus existing category if editing an older record
-  const categories = useMemo(() => {
-    if (category && !baseCategories.includes(category)) {
-      return [...baseCategories, category];
-    }
-    return baseCategories;
-  }, [category]);
+  const isGeneralOverhead = false;
 
   // Store original snapshot for edit comparisons
   const original = useMemo(() => {
     if (isEditing && editItem?.data) {
       const exp: ExpenseRecord = editItem.data;
       return {
-        category: exp.category || 'School & College',
+        category: exp.category || 'General Expense',
         personId: exp.personId || '',
         amount: String(exp.amount || ''),
         date: exp.date || '',
@@ -57,14 +40,14 @@ export const ExpenseFormModal: React.FC = () => {
     setNoteError('');
     if (isEditing && editItem?.data) {
       const exp: ExpenseRecord = editItem.data;
-      setCategory(exp.category || 'School & College');
+      setCategory(exp.category || 'General Expense');
       setPersonId(exp.personId || '');
       setAmount(String(exp.amount || ''));
       setDate(exp.date || new Date().toISOString().split('T')[0]);
       setPaymentMethod(exp.paymentMethod || 'UPI');
       setDescription(exp.description || '');
     } else {
-      setCategory('School & College');
+      setCategory('General Expense');
       setPersonId('');
       setAmount('');
       setDate(new Date().toISOString().split('T')[0]);
@@ -75,7 +58,6 @@ export const ExpenseFormModal: React.FC = () => {
 
   // Track modified fields
   const isAmountModified = isEditing && original && amount !== original.amount;
-  const isCategoryModified = isEditing && original && category !== original.category;
   const isPersonModified = isEditing && original && personId !== original.personId;
   const isDateModified = isEditing && original && date !== original.date;
   const isMethodModified = isEditing && original && paymentMethod !== original.paymentMethod;
@@ -83,7 +65,6 @@ export const ExpenseFormModal: React.FC = () => {
 
   const totalModifications = [
     isAmountModified,
-    isCategoryModified,
     isPersonModified,
     isDateModified,
     isMethodModified,
@@ -139,8 +120,6 @@ export const ExpenseFormModal: React.FC = () => {
       );
     }
   };
-
-  const paymentMethods: PaymentMethod[] = ['UPI', 'Cash', 'Bank', 'Other'];
 
   return (
     <AnimatePresence>
@@ -245,54 +224,6 @@ export const ExpenseFormModal: React.FC = () => {
               {isAmountModified && original && (
                 <p className="text-[10px] text-violet-700 font-semibold mt-1">
                   Original: ₹{parseFloat(original.amount || '0').toLocaleString('en-IN')}
-                </p>
-              )}
-            </div>
-
-            {/* Expense Category */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  Expense Category <span className="text-rose-500">*</span>
-                </label>
-                {isEditing && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                      isCategoryModified
-                        ? 'bg-violet-100 text-violet-800 border border-violet-300 font-bold'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {isCategoryModified ? 'New Category' : 'Existing Category'}
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <Tag
-                  className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${
-                    isCategoryModified ? 'text-violet-600' : 'text-slate-400'
-                  }`}
-                />
-                <select
-                  id="expense-form-category"
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-semibold outline-none appearance-none transition-all ${
-                    isCategoryModified
-                      ? 'bg-violet-50 border-violet-500 text-violet-950 font-bold ring-2 ring-violet-500/20'
-                      : 'border-slate-200 text-slate-800 bg-white focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20'
-                  }`}
-                >
-                  {categories.map((c, idx) => (
-                    <option key={`exp-cat-${c}-${idx}`} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {isCategoryModified && original && (
-                <p className="text-[10px] text-violet-700 font-semibold mt-1">
-                  Original: {original.category}
                 </p>
               )}
             </div>
@@ -418,25 +349,28 @@ export const ExpenseFormModal: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {paymentMethods.map(method => (
-                  <motion.button
-                    key={method}
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setPaymentMethod(method)}
-                    className={`py-2 px-2 text-center rounded-xl text-xs font-bold transition-all ${
-                      paymentMethod === method
-                        ? isMethodModified
-                          ? 'bg-violet-600 text-white shadow-md ring-2 ring-violet-400'
-                          : 'bg-rose-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {method}
-                  </motion.button>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                {PAYMENT_METHODS.map(method => {
+                  const cfg = PAYMENT_METHOD_CONFIGS[method];
+                  const isSelected = paymentMethod === method;
+                  return (
+                    <motion.button
+                      key={method}
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPaymentMethod(method)}
+                      className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center space-x-1.5 ${
+                        isSelected
+                          ? cfg.activeClass
+                          : cfg.inactiveClass
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-white' : cfg.dotColor}`} />
+                      <span>{method}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
 

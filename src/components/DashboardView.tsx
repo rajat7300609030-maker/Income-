@@ -23,6 +23,10 @@ import {
   History,
   Landmark,
   Banknote,
+  QrCode,
+  GraduationCap,
+  Briefcase,
+  Package,
   Trash2,
   Edit2,
   Download,
@@ -32,7 +36,28 @@ import { useApp } from '../context/AppContext';
 import { formatINR } from '../services/calculations';
 import { AnimatedCounter } from './AnimatedCounter';
 import { TransactionDetailModal } from './TransactionDetailModal';
-import { Transaction } from '../types';
+import { TransactionCard } from './TransactionCard';
+import { Transaction, PAYMENT_METHOD_CONFIGS } from '../types';
+
+// Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
+
+const cleanCategory = (cat?: string): string => {
+  if (!cat) return '';
+  return cat.replace(/\s*\(recv\)/gi, '').replace(/\s*\(received\)/gi, '').trim();
+};
 
 export const DashboardView: React.FC = () => {
   const {
@@ -49,6 +74,11 @@ export const DashboardView: React.FC = () => {
     startEditItem,
     recycleBinCount,
     openTransactionsWithType,
+    openTransactionsWithPaymentMethod,
+    openDeleteConfirm,
+    deleteIncome,
+    deleteExpense,
+    deletePayment,
   } = useApp();
 
   // Selected Transaction for Floating Detail Popup (with 5-second auto-close)
@@ -78,6 +108,19 @@ export const DashboardView: React.FC = () => {
         startEditItem({ type: 'payment', data: item });
       }
     }
+  };
+
+  const handleDeleteTx = (tx: Transaction) => {
+    const rawId = tx.id.replace(/^tx_/, '');
+    openDeleteConfirm(
+      `Delete ${tx.type}?`,
+      `Are you sure you want to delete this ${formatINR(tx.amount)} ${tx.type} record?`,
+      () => {
+        if (tx.type === 'Income') deleteIncome(rawId);
+        else if (tx.type === 'Expense') deleteExpense(rawId);
+        else if (tx.type === 'Payment') deletePayment(rawId);
+      }
+    );
   };
 
   // Income vs Expense Filter State: 'day' | 'week' | 'month' | 'year'
@@ -362,28 +405,28 @@ export const DashboardView: React.FC = () => {
               duration={1000}
             />
           </h2>
-          <p className="text-xs text-blue-200 dark:text-slate-400 mt-1 flex items-center flex-wrap gap-1">
-            <span>Total Income (</span>
-            <AnimatedCounter value={totals.totalIncome} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
-            <span>) − Total Expenses (</span>
-            <AnimatedCounter value={totals.totalExpenses} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
+          <p className="text-xs text-blue-200 dark:text-slate-400 mt-1 flex items-center flex-wrap gap-1 font-medium">
+            <span>Bank &amp; UPI (</span>
+            <AnimatedCounter value={totals.bankBalance} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
+            <span>) + Cash (</span>
+            <AnimatedCounter value={totals.cashBalance} duration={1000} className="font-semibold text-white/95 dark:text-slate-200" />
             <span>)</span>
           </p>
         </div>
 
-        {/* Dual Income Breakdown: Banking Income & Cash Income (Only Income, No Expense or Other deductions) */}
+        {/* Dual Mode Balance Breakdown: Banking Balance & Cash Balance */}
         <div className="mt-4 pt-3 border-t border-white/20 dark:border-neutral-800 relative z-10">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10.5px] font-bold text-blue-100 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1">
-              <span>Income Breakdown</span>
+              <span>Mode Breakdown</span>
             </span>
             <span className="text-[9.5px] font-bold bg-white/20 dark:bg-neutral-900 text-white dark:text-slate-200 px-2 py-0.5 rounded-full backdrop-blur-xs border dark:border-neutral-800">
-              Income Only
+              Net Balance
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {/* Banking Income Card (Bank & UPI) */}
+            {/* Banking Balance Card (Bank & UPI) */}
             <motion.div
               id="net-balance-bank-card"
               whileHover={{ scale: 1.02 }}
@@ -402,12 +445,12 @@ export const DashboardView: React.FC = () => {
                   <Landmark className="w-3.5 h-3.5" />
                 </motion.div>
                 <span className="text-[10.5px] font-bold text-cyan-200 dark:text-cyan-400 uppercase tracking-wider truncate">
-                  Banking Income
+                  Banking Balance
                 </span>
               </div>
               <p id="net-balance-bank-amount" className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
                 <AnimatedCounter
-                  value={totals.bankingIncome}
+                  value={totals.bankBalance}
                   glow
                   glowColor="cyan"
                   duration={1000}
@@ -415,11 +458,11 @@ export const DashboardView: React.FC = () => {
               </p>
               <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-cyan-200/90 dark:text-cyan-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 inline-block shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
-                <span className="truncate">Bank & UPI</span>
+                <span className="truncate">Bank &amp; UPI (Less Exp/Pay)</span>
               </div>
             </motion.div>
 
-            {/* Cash Income Card */}
+            {/* Cash Balance Card */}
             <motion.div
               id="net-balance-cash-card"
               whileHover={{ scale: 1.02 }}
@@ -438,12 +481,12 @@ export const DashboardView: React.FC = () => {
                   <Banknote className="w-3.5 h-3.5" />
                 </motion.div>
                 <span className="text-[10.5px] font-bold text-emerald-200 dark:text-emerald-400 uppercase tracking-wider truncate">
-                  Cash Income
+                  Cash Balance
                 </span>
               </div>
               <p id="net-balance-cash-amount" className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
                 <AnimatedCounter
-                  value={totals.cashIncome}
+                  value={totals.cashBalance}
                   glow
                   glowColor="emerald"
                   duration={1000}
@@ -451,7 +494,7 @@ export const DashboardView: React.FC = () => {
               </p>
               <div className="mt-1 flex items-center space-x-1 text-[9.5px] text-emerald-200/90 dark:text-emerald-300/80 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 inline-block shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
-                <span className="truncate">Cash Received</span>
+                <span className="truncate">In Hand (Less Exp/Pay)</span>
               </div>
             </motion.div>
           </div>
@@ -697,6 +740,293 @@ export const DashboardView: React.FC = () => {
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5">Person ledger balance • Tap for Payments only</p>
           </motion.div>
+        </div>
+
+        {/* Payment Modes Breakdown (UPI, Cash, Bank, School, Salary, Other) */}
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-neutral-800">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+                <span>Payment Mode Outflows</span>
+                <span className="px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950/60 text-[8px] font-black text-blue-700 dark:text-blue-300">
+                  ALL MODES
+                </span>
+              </h4>
+              <p className="text-[9.5px] text-slate-400 dark:text-slate-400 font-medium">
+                Payment &amp; Expense amount breakdown &amp; total by mode
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-[9px] font-bold text-slate-400 block uppercase">Grand Total Outflows</span>
+              <span className="text-xs font-black text-blue-700 dark:text-blue-400">
+                {formatINR(totals.totalExpenses + totals.totalPayments)}
+              </span>
+            </div>
+          </div>
+
+          {/* Quick All-Modes Aggregation Strip */}
+          <div className="grid grid-cols-3 gap-1.5 p-2 rounded-xl bg-slate-50/90 dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 text-center mb-2.5">
+            <div>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">All Payments</span>
+              <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                {formatINR(totals.totalPayments)}
+              </span>
+            </div>
+            <div className="border-x border-slate-200/80 dark:border-neutral-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">All Expenses</span>
+              <span className="text-xs font-black text-rose-600 dark:text-rose-400">
+                {formatINR(totals.totalExpenses)}
+              </span>
+            </div>
+            <div>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Outflows</span>
+              <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                {formatINR(totals.totalExpenses + totals.totalPayments)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {/* UPI Card */}
+            <motion.div
+              id="financial-summary-upi-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('UPI')}
+              className="p-2.5 rounded-2xl bg-blue-50/70 dark:bg-neutral-950 border border-blue-200/80 dark:border-neutral-800 hover:border-blue-300 dark:hover:border-blue-700/60 shadow-xs transition-all cursor-pointer group"
+              title="UPI: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <QrCode className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-blue-100/90 dark:bg-blue-900/50 text-[8.5px] font-bold text-blue-800 dark:text-blue-300">
+                  UPI
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-blue-700/80 dark:text-blue-400/80 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-blue-800 dark:text-blue-300 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.upiTotal}
+                    glow
+                    glowColor="cyan"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-blue-100 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-blue-700/90 dark:text-blue-400/90 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.upiPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.upiExpenses || 0)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Cash Card */}
+            <motion.div
+              id="financial-summary-cash-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('Cash')}
+              className="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-neutral-950 border border-emerald-200/80 dark:border-neutral-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-xs transition-all cursor-pointer group"
+              title="Cash: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Banknote className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-emerald-100/90 dark:bg-emerald-900/50 text-[8.5px] font-bold text-emerald-800 dark:text-emerald-300">
+                  Cash
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-emerald-700/80 dark:text-emerald-400/80 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-emerald-800 dark:text-emerald-300 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.cashTotal}
+                    glow
+                    glowColor="emerald"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-emerald-100 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-emerald-700/90 dark:text-emerald-400/90 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.cashPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.cashExpenses || 0)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Bank Card */}
+            <motion.div
+              id="financial-summary-bank-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('Bank')}
+              className="p-2.5 rounded-2xl bg-cyan-50/70 dark:bg-neutral-950 border border-cyan-200/80 dark:border-neutral-800 hover:border-cyan-300 dark:hover:border-cyan-700/60 shadow-xs transition-all cursor-pointer group"
+              title="Bank: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Landmark className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-cyan-100/90 dark:bg-cyan-900/50 text-[8.5px] font-bold text-cyan-800 dark:text-cyan-300">
+                  Bank
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-cyan-700/80 dark:text-cyan-400/80 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-cyan-800 dark:text-cyan-300 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.bankTotal}
+                    glow
+                    glowColor="cyan"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-cyan-100 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-cyan-700/90 dark:text-cyan-400/90 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.bankPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.bankExpenses)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* School Card */}
+            <motion.div
+              id="financial-summary-school-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('School')}
+              className="p-2.5 rounded-2xl bg-teal-50/70 dark:bg-neutral-950 border border-teal-200/80 dark:border-neutral-800 hover:border-teal-300 dark:hover:border-teal-700/60 shadow-xs transition-all cursor-pointer group"
+              title="School: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-teal-100/90 dark:bg-teal-900/50 text-[8.5px] font-bold text-teal-800 dark:text-teal-300">
+                  School
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-teal-700/80 dark:text-teal-400/80 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-teal-800 dark:text-teal-300 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.schoolTotal}
+                    glow
+                    glowColor="emerald"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-teal-100 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-teal-700/90 dark:text-teal-400/90 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.schoolPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.schoolExpenses)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Salary Card */}
+            <motion.div
+              id="financial-summary-salary-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('Salary')}
+              className="p-2.5 rounded-2xl bg-fuchsia-50/70 dark:bg-neutral-950 border border-fuchsia-200/80 dark:border-neutral-800 hover:border-fuchsia-300 dark:hover:border-fuchsia-700/60 shadow-xs transition-all cursor-pointer group"
+              title="Salary: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-950/80 text-fuchsia-700 dark:text-fuchsia-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Briefcase className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-fuchsia-100/90 dark:bg-fuchsia-900/50 text-[8.5px] font-bold text-fuchsia-800 dark:text-fuchsia-300">
+                  Salary
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-fuchsia-700/80 dark:text-fuchsia-400/80 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-fuchsia-800 dark:text-fuchsia-300 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.salaryTotal}
+                    glow
+                    glowColor="cyan"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-fuchsia-100 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-fuchsia-700/90 dark:text-fuchsia-400/90 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.salaryPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.salaryExpenses)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Other Card */}
+            <motion.div
+              id="financial-summary-other-card"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => openTransactionsWithPaymentMethod('Other')}
+              className="p-2.5 rounded-2xl bg-slate-100/70 dark:bg-neutral-950 border border-slate-200/80 dark:border-neutral-800 hover:border-slate-300 dark:hover:border-slate-700/60 shadow-xs transition-all cursor-pointer group"
+              title="Other: Tap to view transactions"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Package className="w-3.5 h-3.5" />
+                </div>
+                <span className="px-1.5 py-0.2 rounded-md bg-slate-200/90 dark:bg-neutral-800 text-[8.5px] font-bold text-slate-700 dark:text-slate-300">
+                  Other
+                </span>
+              </div>
+              <div className="mb-1">
+                <span className="text-[8.5px] font-bold text-slate-600 dark:text-slate-400 uppercase block">Total Amount</span>
+                <p className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-200 tracking-tight leading-tight">
+                  <AnimatedCounter
+                    value={totals.otherTotal}
+                    glow
+                    glowColor="white"
+                    duration={1000}
+                  />
+                </p>
+              </div>
+              <div className="mt-1.5 pt-1 border-t border-slate-200/80 dark:border-neutral-800/80 space-y-0.5 text-[9px] text-slate-600 dark:text-slate-400 font-medium">
+                <div className="flex items-center justify-between">
+                  <span>Payments:</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">{formatINR(totals.otherPayments)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Expenses:</span>
+                  <span className="font-bold text-rose-700 dark:text-rose-400">{formatINR(totals.otherExpenses || 0)}</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -1033,181 +1363,18 @@ export const DashboardView: React.FC = () => {
         {transactions.length === 0 ? (
           <p className="text-xs text-slate-400 text-center py-4">No transactions recorded yet</p>
         ) : (
-          <div className="divide-y divide-slate-50 dark:divide-neutral-800">
-            {transactions.slice(0, 4).map((tx, idx) => {
-              const isIncome = tx.type === 'Income';
-              const isExpense = tx.type === 'Expense';
-              const isPayment = tx.type === 'Payment';
-              const isPaid = isPayment && tx.paymentDirection === 'Paid';
-              const isReceived = isPayment && tx.paymentDirection === 'Received';
-
-              // Resolve Person Name and Type
-              let resolvedPersonName = (tx.personName || '').trim();
-              let resolvedPersonType = '';
-              if (tx.personId) {
-                const found = persons.find(p => p.id === tx.personId);
-                if (found) {
-                  resolvedPersonName = found.name || resolvedPersonName;
-                  resolvedPersonType = found.type;
-                }
-              }
-              if (!resolvedPersonType && resolvedPersonName) {
-                const found = persons.find(p => p.name && p.name.trim().toLowerCase() === resolvedPersonName.toLowerCase());
-                if (found) {
-                  resolvedPersonType = found.type;
-                  resolvedPersonName = found.name;
-                }
-              }
-              if ((!resolvedPersonName || !resolvedPersonType) && (tx.sourceId || tx.id)) {
-                const pay = payments.find(p => p.id === tx.sourceId || `tx_${p.id}` === tx.id);
-                if (pay) {
-                  if (!resolvedPersonName) resolvedPersonName = pay.personName || '';
-                  if (pay.personId) {
-                    const found = persons.find(p => p.id === pay.personId);
-                    if (found) {
-                      resolvedPersonName = found.name || resolvedPersonName;
-                      resolvedPersonType = found.type;
-                    }
-                  }
-                }
-              }
-
-              const iconBox = isIncome
-                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
-                : isExpense
-                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 ring-1 ring-amber-400/50';
-
-              const amountColor = isIncome
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : isExpense
-                ? 'text-rose-600 dark:text-rose-400'
-                : 'text-amber-600 dark:text-amber-400';
-
-              const amountSign = isExpense || isPaid ? '-' : '+';
-
-              const badgeClasses = isIncome
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200'
-                : isExpense
-                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200'
-                : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-xs font-bold border border-amber-400/50';
-
-              const cardClasses = isPayment
-                ? 'bg-gradient-to-r from-amber-50/90 via-amber-50/40 to-transparent dark:from-amber-950/40 dark:via-neutral-900/40 dark:to-transparent border-amber-300 dark:border-amber-700/70 border-l-4 border-l-amber-500 hover:bg-amber-50/80 shadow-xs'
-                : isExpense
-                ? 'border-transparent border-l-4 border-l-rose-500 hover:bg-slate-50 dark:hover:bg-neutral-900'
-                : 'border-transparent border-l-4 border-l-emerald-500 hover:bg-slate-50 dark:hover:bg-neutral-900';
-
-              return (
-                <motion.div
-                  key={`${tx.id || 'tx'}-${idx}`}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.04 * idx, duration: 0.2 }}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleTxClick(tx)}
-                  className={`py-2.5 px-3 rounded-xl flex items-center justify-between transition-all cursor-pointer border ${cardClasses}`}
-                  title="Tap to view or edit"
-                >
-                  <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
-                    <motion.div
-                      whileHover={{ scale: 1.15, rotate: 10 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-xs ${iconBox}`}
-                    >
-                      {isIncome && <ArrowDownLeft className="w-4 h-4" />}
-                      {isExpense && <ArrowUpRight className="w-4 h-4" />}
-                      {isPayment && <Handshake className="w-4 h-4" />}
-                    </motion.div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-1.5 flex-wrap">
-                        {isPayment ? (
-                          <>
-                            <p className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
-                              {resolvedPersonName || tx.note || tx.category || 'Person Payment'}
-                            </p>
-                            {resolvedPersonType && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
-                                {resolvedPersonType}
-                              </span>
-                            )}
-                          </>
-                        ) : isExpense ? (
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                            {tx.note || tx.category || 'Expense'}
-                          </p>
-                        ) : (
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                            {tx.note || resolvedPersonName || 'Income'}
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                        {tx.date} • {tx.paymentMethod}
-                        {isPayment && (
-                          <span className="font-semibold ml-1 text-amber-700 dark:text-amber-400">
-                            • {isPaid ? 'Paid to Person' : 'Received'}
-                          </span>
-                        )}
-                        {tx.type === 'Expense' && tx.note && tx.category && ` • ${tx.category}`}
-                        {tx.type === 'Income' && tx.note && ` • ${resolvedPersonName || 'Income'}`}
-                      </p>
-                      {isPayment && (
-                        <div className="flex items-center space-x-1.5 text-[9.5px] mt-1 flex-wrap">
-                          <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold">
-                            <User className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
-                            <span className="truncate max-w-[120px]">{resolvedPersonName || 'Person'}</span>
-                          </span>
-                          {tx.category && (
-                            <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-white/90 dark:bg-neutral-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-medium">
-                              <Tag className="w-2.5 h-2.5 text-amber-600" />
-                              <span>{tx.category}</span>
-                            </span>
-                          )}
-                          {tx.note && (
-                            <span className="text-slate-500 dark:text-slate-400 truncate max-w-[120px] italic">
-                              "{tx.note}"
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <div className="text-right">
-                      <p className={`text-xs font-black ${amountColor}`}>
-                        {amountSign}
-                        {formatINR(tx.amount)}
-                      </p>
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${badgeClasses}`}>
-                        {isPayment
-                          ? isPaid
-                            ? 'Paid'
-                            : isReceived
-                            ? 'Received'
-                            : 'Payment'
-                          : tx.type}
-                      </span>
-                    </div>
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.15, rotate: 6 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditFromDetail(tx);
-                      }}
-                      className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 shadow-2xs transition-all"
-                      title="Edit Record"
-                    >
-                      <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-                    </motion.button>
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div className="space-y-2">
+            {transactions.slice(0, 5).map((tx, idx) => (
+              <TransactionCard
+                key={`${tx.id || 'dash-tx'}-${idx}`}
+                transaction={tx}
+                onClick={() => handleTxClick(tx)}
+                onEdit={() => handleEditFromDetail(tx)}
+                onDelete={() => handleDeleteTx(tx)}
+                displayMode="both"
+                idPrefix="dash-recent"
+              />
+            ))}
           </div>
         )}
       </motion.div>

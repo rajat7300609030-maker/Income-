@@ -24,8 +24,24 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { calculatePersonSummary, formatINR } from '../services/calculations';
+import { PAYMENT_METHOD_CONFIGS } from '../types';
 import { PersonLeaveModal } from './PersonLeaveModal';
 import { PersonClosedModal } from './PersonClosedModal';
+
+// Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
 
 export const PersonProfileModal: React.FC = () => {
   const {
@@ -736,11 +752,17 @@ export const PersonProfileModal: React.FC = () => {
 
                         <div>
                           <p className="text-xs font-bold text-slate-800">
-                            {tx.type} {tx.paymentDirection ? `(${tx.paymentDirection})` : ''}
+                            {tx.type}
                           </p>
-                          <p className="text-[10px] text-slate-400">
-                            {tx.date} • {tx.paymentMethod}
-                          </p>
+                          <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 mt-0.5">
+                            <span>{tx.date}</span>
+                            <span>•</span>
+                            <span className={`font-semibold px-1 py-0.2 rounded text-[9.5px] ${
+                              PAYMENT_METHOD_CONFIGS[tx.paymentMethod]?.badgeClass || 'text-slate-600'
+                            }`}>
+                              {tx.paymentMethod}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -755,8 +777,8 @@ export const PersonProfileModal: React.FC = () => {
                           {tx.type === 'Expense' || tx.paymentDirection === 'Paid' ? '-' : '+'}
                           {formatINR(tx.amount)}
                         </p>
-                        {tx.note && (
-                          <p className="text-[10px] text-slate-400 max-w-[120px] truncate">{tx.note}</p>
+                        {cleanPaymentNote(tx.note) && (
+                          <p className="text-[10px] text-slate-400 max-w-[120px] truncate">{cleanPaymentNote(tx.note)}</p>
                         )}
                       </div>
                     </motion.div>

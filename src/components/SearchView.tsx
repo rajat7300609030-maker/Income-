@@ -16,7 +16,27 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatINR } from '../services/calculations';
-import { Transaction } from '../types';
+import { Transaction, PAYMENT_METHOD_CONFIGS } from '../types';
+
+// Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
+
+const cleanCategory = (cat?: string): string => {
+  if (!cat) return '';
+  return cat.replace(/\s*\(recv\)/gi, '').replace(/\s*\(received\)/gi, '').trim();
+};
 
 export const SearchView: React.FC = () => {
   const {
@@ -313,7 +333,7 @@ export const SearchView: React.FC = () => {
                                 {isPayment ? (
                                   <>
                                     <p className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
-                                      {resolvedPersonName || tx.note || tx.category || 'Person Payment'}
+                                      {resolvedPersonName || cleanCategory(tx.category) || 'Payment'}
                                     </p>
                                     {resolvedPersonType && (
                                       <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
@@ -331,31 +351,28 @@ export const SearchView: React.FC = () => {
                                   </p>
                                 )}
                               </div>
-                              <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                                {tx.date} • {tx.paymentMethod}
-                                {isPayment && (
-                                  <span className={`font-semibold ml-1 ${isPaid ? 'text-amber-700 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`}>
-                                    • {isPaid ? 'Paid to Person' : 'Received'}
-                                  </span>
-                                )}
-                                {tx.type === 'Expense' && tx.note && tx.category && ` • ${tx.category}`}
-                                {tx.type === 'Income' && tx.note && ` • ${resolvedPersonName || 'Income'}`}
+                              <p className="text-[10px] text-slate-400 mt-0.5 truncate flex items-center space-x-1">
+                                <span>{tx.date}</span>
+                                <span>•</span>
+                                <span className={`font-semibold px-1 py-0.2 rounded text-[9.5px] ${
+                                  PAYMENT_METHOD_CONFIGS[tx.paymentMethod]?.badgeClass || 'text-slate-600 dark:text-slate-300'
+                                }`}>
+                                  {tx.paymentMethod}
+                                </span>
+                                {tx.type === 'Expense' && tx.note && tx.category && <span>• {tx.category}</span>}
+                                {tx.type === 'Income' && tx.note && <span>• {resolvedPersonName || 'Income'}</span>}
                               </p>
                               {isPayment && (
                                 <div className="flex items-center space-x-1.5 text-[9.5px] mt-1 flex-wrap">
-                                  <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold">
-                                    <User className="w-2.5 h-2.5 text-amber-700 dark:text-amber-400" />
-                                    <span className="truncate max-w-[120px]">{resolvedPersonName || 'Person'}</span>
-                                  </span>
-                                  {tx.category && (
-                                    <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-white/90 dark:bg-neutral-800 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-medium">
+                                  {cleanCategory(tx.category) && (
+                                    <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded bg-white/90 dark:bg-neutral-800 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 font-medium shadow-2xs">
                                       <Tag className="w-2.5 h-2.5 text-amber-600" />
-                                      <span>{tx.category}</span>
+                                      <span>{cleanCategory(tx.category)}</span>
                                     </span>
                                   )}
-                                  {tx.note && (
+                                  {cleanPaymentNote(tx.note) && (
                                     <span className="text-slate-500 dark:text-slate-400 truncate max-w-[120px] italic">
-                                      "{tx.note}"
+                                      "{cleanPaymentNote(tx.note)}"
                                     </span>
                                   )}
                                 </div>
@@ -369,14 +386,8 @@ export const SearchView: React.FC = () => {
                                 {amountSign}
                                 {formatINR(tx.amount)}
                               </p>
-                              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${badgeClasses}`}>
-                                {isPayment
-                                  ? isPaid
-                                    ? 'Paid'
-                                    : isReceived
-                                    ? 'Received'
-                                    : 'Payment'
-                                  : tx.type}
+                              <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${badgeClasses}`}>
+                                {isPayment ? 'Payment' : tx.type}
                               </span>
                             </div>
                             <motion.button

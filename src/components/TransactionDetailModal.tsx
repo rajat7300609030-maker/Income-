@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Transaction } from '../types';
 import { useApp } from '../context/AppContext';
+import { formatDDMMYYYY } from './TransactionCard';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -29,6 +30,21 @@ interface TransactionDetailModalProps {
   onEdit?: (transaction: Transaction) => void;
   onDelete?: (transaction: Transaction) => void;
 }
+
+// Format currency in Indian format
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
 
 export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
   transaction,
@@ -185,13 +201,28 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               </span>
             </div>
 
-            {/* Amount Display */}
+            {/* Amount Display with Glowing Animation */}
             <div className="mt-3">
               <p className="text-[11px] text-white/80 font-medium">Transaction Amount</p>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-xs">
+              <motion.h2
+                animate={{
+                  textShadow: [
+                    '0 0 4px rgba(255, 255, 255, 0.4)',
+                    '0 0 16px rgba(255, 255, 255, 0.95), 0 0 28px rgba(255, 255, 255, 0.65)',
+                    '0 0 4px rgba(255, 255, 255, 0.4)',
+                  ],
+                  scale: [1, 1.02, 1],
+                }}
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-xs font-mono"
+              >
                 {isExpense || isPaid ? '-' : '+'}
                 {formatINR(transaction.amount)}
-              </h2>
+              </motion.h2>
             </div>
           </div>
 
@@ -238,14 +269,36 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
               </div>
             )}
 
-            {/* Date & Time Grid */}
+            {/* Date & Method Grid */}
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-1.5 text-slate-400 mb-1">
                   <Calendar className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-semibold uppercase tracking-wide">Date</span>
                 </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{transaction.date}</p>
+                <motion.span
+                  animate={{
+                    boxShadow: [
+                      '0 0 0px rgba(59, 130, 246, 0.2)',
+                      '0 0 10px rgba(59, 130, 246, 0.65)',
+                      '0 0 0px rgba(59, 130, 246, 0.2)',
+                    ],
+                    borderColor: [
+                      'rgba(147, 197, 253, 0.6)',
+                      'rgba(59, 130, 246, 1)',
+                      'rgba(147, 197, 253, 0.6)',
+                    ],
+                  }}
+                  transition={{
+                    duration: 2.2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg font-mono text-xs font-black text-blue-700 dark:text-blue-300 bg-blue-50/90 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-700/80 shadow-xs"
+                >
+                  <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span>{formatDDMMYYYY(transaction.date)}</span>
+                </motion.span>
               </div>
 
               <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
@@ -290,7 +343,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             )}
 
             {/* Note / Remarks */}
-            {transaction.note && (
+            {(isPayment ? cleanPaymentNote(transaction.note) : transaction.note) && (
               <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-black border border-slate-100 dark:border-neutral-800">
                 <div className="flex items-center space-x-1.5 text-slate-400 mb-1">
                   <FileText className="w-3.5 h-3.5" />
@@ -299,7 +352,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic bg-white dark:bg-neutral-900 p-2 rounded-xl border border-slate-100 dark:border-neutral-800">
-                  "{transaction.note}"
+                  "{isPayment ? cleanPaymentNote(transaction.note) : transaction.note}"
                 </p>
               </div>
             )}

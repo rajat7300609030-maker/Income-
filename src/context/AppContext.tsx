@@ -14,6 +14,7 @@ import {
   RecycleBinItem,
   Transaction,
   TransactionType,
+  PaymentMethod,
   UserProfile,
   AppTheme,
 } from '../types';
@@ -144,6 +145,9 @@ interface AppContextType {
   transactionFilter: TransactionType | 'All';
   setTransactionFilter: (filter: TransactionType | 'All') => void;
   openTransactionsWithType: (type: TransactionType | 'All') => void;
+  paymentMethodFilter: PaymentMethod | 'All';
+  setPaymentMethodFilter: (filter: PaymentMethod | 'All') => void;
+  openTransactionsWithPaymentMethod: (method: PaymentMethod | 'All') => void;
 
   // Appearance & Theme (Light / Dark / System)
   theme: AppTheme;
@@ -225,6 +229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [payments, setPayments] = useState<PaymentRecord[]>(() => LocalStorageManager.getPayments());
   const [recycleBin, setRecycleBin] = useState<RecycleBinItem[]>(() => LocalStorageManager.getRecycleBin());
   const [transactionFilter, setTransactionFilter] = useState<TransactionType | 'All'>('All');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethod | 'All'>('All');
 
   // Fully functional Light and Dark Mode system
   const [theme, setThemeState] = useState<AppTheme>(() => {
@@ -487,6 +492,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentView('transactions');
   }, [setCurrentView]);
 
+  // Navigate to transactions view with pre-set payment method filter (UPI, Cash, Bank, School, Salary, Other)
+  const openTransactionsWithPaymentMethod = useCallback((method: PaymentMethod | 'All') => {
+    setPaymentMethodFilter(method);
+    setTransactionFilter('All');
+    setCurrentView('transactions');
+  }, [setCurrentView]);
+
   const openQuickAction = useCallback((action: QuickActionModal, clearEdit = true) => {
     if (clearEdit) {
       setEditItem(null);
@@ -619,7 +631,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         date: new Date().toISOString().split('T')[0],
         type: direction,
         paymentMethod: 'UPI',
-        note: defaultNote || (direction === 'Received' ? `Payment received from ${person.name}` : `Payment made to ${person.name}`),
+        note: defaultNote || '',
         createdAt: '',
         updatedAt: '',
       } as any,
@@ -1377,6 +1389,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         transactionFilter,
         setTransactionFilter,
         openTransactionsWithType,
+        paymentMethodFilter,
+        setPaymentMethodFilter,
+        openTransactionsWithPaymentMethod,
         theme,
         isDark,
         setTheme,

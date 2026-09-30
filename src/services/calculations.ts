@@ -80,10 +80,10 @@ export function calculateDashboardTotals(
     .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
 
   const otherPaymentsReceived = safePayment
-    .filter(p => p && p.paymentMethod === 'Other' && p.type === 'Received')
+    .filter(p => p && (p.paymentMethod === 'Other' || p.paymentMethod === 'School' || p.paymentMethod === 'Salary') && p.type === 'Received')
     .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
   const otherPaymentsPaid = safePayment
-    .filter(p => p && p.paymentMethod === 'Other' && p.type === 'Paid')
+    .filter(p => p && (p.paymentMethod === 'Other' || p.paymentMethod === 'School' || p.paymentMethod === 'Salary') && p.type === 'Paid')
     .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
 
   // Pure Income breakdown by payment method (Income only - without expense or other amount):
@@ -103,12 +103,97 @@ export function calculateDashboardTotals(
   const bankingIncome = pureBankIncome + upiIncome;
 
   const otherIncome = safeIncome
-    .filter(item => item && item.paymentMethod === 'Other')
+    .filter(item => item && (item.paymentMethod === 'Other' || item.paymentMethod === 'School' || item.paymentMethod === 'Salary'))
     .reduce((acc, item) => acc + (Number(item?.amount) || 0), 0);
 
-  // Current Net Balance: directly Total Income minus Total Expenses (income mese expense subtract)
-  const netBalance = totalIncome - totalExpenses;
-  const currentBalance = totalIncome - totalExpenses;
+  // Expenses breakdown by payment method:
+  const cashExpenses = safeExpense
+    .filter(item => item && item.paymentMethod === 'Cash')
+    .reduce((acc, item) => acc + (Number(item?.amount) || 0), 0);
+
+  const pureBankExpenses = safeExpense
+    .filter(item => item && item.paymentMethod === 'Bank')
+    .reduce((acc, item) => acc + (Number(item?.amount) || 0), 0);
+
+  const upiExpenses = safeExpense
+    .filter(item => item && item.paymentMethod === 'UPI')
+    .reduce((acc, item) => acc + (Number(item?.amount) || 0), 0);
+
+  const bankingExpenses = pureBankExpenses + upiExpenses;
+
+  const otherExpenses = safeExpense
+    .filter(item => item && (item.paymentMethod === 'Other' || item.paymentMethod === 'School' || item.paymentMethod === 'Salary'))
+    .reduce((acc, item) => acc + (Number(item?.amount) || 0), 0);
+
+  // UPI payments and expenses breakdown:
+  const upiPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'UPI')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const upiTotal = upiExpenses + upiPayments;
+
+  // Cash payments and expenses breakdown:
+  const cashPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'Cash')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const cashTotal = cashExpenses + cashPayments;
+
+  // Bank payments and expenses breakdown:
+  const bankExpenses = pureBankExpenses;
+  const bankPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'Bank')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const bankTotal = bankExpenses + bankPayments;
+
+  // School payments and expenses breakdown:
+  const schoolExpenses = safeExpense
+    .filter(e => e && e.paymentMethod === 'School')
+    .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  const schoolPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'School')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const schoolTotal = schoolExpenses + schoolPayments;
+
+  // Salary payments and expenses breakdown:
+  const salaryExpenses = safeExpense
+    .filter(e => e && e.paymentMethod === 'Salary')
+    .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  const salaryPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'Salary')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const salaryTotal = salaryExpenses + salaryPayments;
+
+  // Other payments and expenses breakdown:
+  const otherMethodExpenses = safeExpense
+    .filter(e => e && e.paymentMethod === 'Other')
+    .reduce((acc, e) => acc + (Number(e?.amount) || 0), 0);
+  const otherMethodPayments = safePayment
+    .filter(p => p && p.paymentMethod === 'Other')
+    .reduce((acc, p) => acc + (Number(p?.amount) || 0), 0);
+  const otherTotal = otherMethodExpenses + otherMethodPayments;
+
+  const nonBankingOutflowsTotal = schoolTotal + salaryTotal + otherTotal;
+
+  // Individual account balances:
+  // UPI Balance = Inflows (UPI Income + UPI Payments Received) - Outflows (UPI Expenses + UPI Payments Paid)
+  const upiBalance = (upiIncome + upiPaymentsReceived) - (upiExpenses + upiPaymentsPaid);
+
+  // Pure Bank Balance = Inflows (Bank Income + Bank Payments Received) - Outflows (Bank Expenses + Bank Payments Paid)
+  const pureBankBalance = (pureBankIncome + bankPaymentsReceived) - (pureBankExpenses + bankPaymentsPaid);
+
+  // Banking Balance combines Bank and UPI balance (Bank & UPI Net Balance)
+  const bankingBalance = upiBalance + pureBankBalance;
+  const bankBalance = bankingBalance;
+
+  // Cash Balance = Inflows (Cash Income + Cash Payments Received) - Outflows (Cash Expenses + Cash Payments Paid)
+  const cashBalance = (cashIncome + cashPaymentsReceived) - (cashExpenses + cashPaymentsPaid);
+
+  // Current Net Balance:
+  // - If UPI or Bank selected: less from UPI and Bank balance
+  // - If Cash option selected: less from Cash balance
+  // - If School, Salary, Other selected: NO amount less from current balance upi, bank, cash
+  // Therefore: Current Net Balance = Banking Balance (Bank & UPI) + Cash Balance
+  const currentBalance = bankingBalance + cashBalance;
+  const netBalance = currentBalance;
 
   // Pending Payments = sum of all person pending amounts that are to receive or to pay
   const personStats = safePerson.map(p => calculatePersonSummary(p, safeIncome, safeExpense, safePayment));
@@ -145,12 +230,36 @@ export function calculateDashboardTotals(
     totalPayments,
     pendingPayments,
     currentBalance,
-    bankBalance: bankingIncome,
-    cashBalance: cashIncome,
+    bankBalance: bankingBalance,
+    cashBalance,
+    bankingBalance,
     bankingIncome,
     cashIncome,
     pureBankIncome,
     upiIncome,
+    pureBankBalance,
+    upiBalance,
+    pureBankExpenses,
+    upiExpenses,
+    upiPayments,
+    upiTotal,
+    bankingExpenses,
+    cashExpenses,
+    cashPayments,
+    cashTotal,
+    bankExpenses,
+    bankPayments,
+    bankTotal,
+    otherExpenses: otherMethodExpenses,
+    schoolExpenses,
+    schoolPayments,
+    schoolTotal,
+    salaryExpenses,
+    salaryPayments,
+    salaryTotal,
+    otherPayments: otherMethodPayments,
+    otherTotal,
+    nonBankingOutflowsTotal,
     todayIncome,
     todayExpenses,
     todayPayments,

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Handshake, Check, Calendar, User, Tag, Sparkles } from 'lucide-react';
+import { X, Handshake, Check, Calendar, User, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { PaymentDirection, PaymentMethod, PaymentRecord, PaymentCategory, PAYMENT_CATEGORIES } from '../types';
+import { PaymentDirection, PaymentMethod, PaymentRecord, PaymentCategory, PAYMENT_METHODS, PAYMENT_METHOD_CONFIGS } from '../types';
 
 export const PaymentFormModal: React.FC = () => {
   const { activeModal, closeQuickAction, savePayment, persons, editItem } = useApp();
@@ -60,7 +60,6 @@ export const PaymentFormModal: React.FC = () => {
   const isDateModified = isEditing && original && date !== original.date;
   const isTypeModified = isEditing && original && type !== original.type;
   const isMethodModified = isEditing && original && paymentMethod !== original.paymentMethod;
-  const isCategoryModified = isEditing && original && category !== original.category;
 
   const totalModifications = [
     isAmountModified,
@@ -68,7 +67,6 @@ export const PaymentFormModal: React.FC = () => {
     isDateModified,
     isTypeModified,
     isMethodModified,
-    isCategoryModified,
   ].filter(Boolean).length;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,8 +91,6 @@ export const PaymentFormModal: React.FC = () => {
       isEditing ? editItem.data.id : undefined
     );
   };
-
-  const paymentMethods: PaymentMethod[] = ['UPI', 'Cash', 'Bank', 'Other'];
 
   return (
     <AnimatePresence>
@@ -366,95 +362,29 @@ export const PaymentFormModal: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {paymentMethods.map(method => (
-                  <motion.button
-                    key={method}
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setPaymentMethod(method)}
-                    className={`py-2 px-2 text-center rounded-xl text-xs font-bold transition-all ${
-                      paymentMethod === method
-                        ? isMethodModified
-                          ? 'bg-violet-600 text-white shadow-md ring-2 ring-violet-400'
-                          : 'bg-amber-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {method}
-                  </motion.button>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                {PAYMENT_METHODS.map(method => {
+                  const cfg = PAYMENT_METHOD_CONFIGS[method];
+                  const isSelected = paymentMethod === method;
+                  return (
+                    <motion.button
+                      key={method}
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPaymentMethod(method)}
+                      className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center space-x-1.5 ${
+                        isSelected
+                          ? cfg.activeClass
+                          : cfg.inactiveClass
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-white' : cfg.dotColor}`} />
+                      <span>{method}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
-            </div>
-
-            {/* Category / Purpose Dropdown */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center space-x-1.5">
-                  <Tag className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Category / Purpose</span>
-                </label>
-                {isEditing && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                      isCategoryModified
-                        ? 'bg-violet-100 text-violet-800 border border-violet-300 font-bold'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {isCategoryModified ? 'New Category' : 'Existing Category'}
-                  </span>
-                )}
-              </div>
-
-              <div className="relative">
-                <select
-                  id="payment-form-category"
-                  value={category}
-                  onChange={e => setCategory(e.target.value as PaymentCategory)}
-                  className={`w-full px-3.5 py-3 rounded-xl border text-xs font-bold appearance-none outline-none transition-all cursor-pointer ${
-                    isCategoryModified
-                      ? 'bg-violet-50 border-violet-500 text-violet-950 ring-2 ring-violet-500/20'
-                      : 'bg-slate-50/80 border-slate-200 text-slate-800 hover:border-slate-300 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
-                  }`}
-                >
-                  <option value="School & College">School & College</option>
-                  <option value="Home">Home</option>
-                  <option value="Salary & Pension">Salary & Pension</option>
-                  <option value="Rent">Rent</option>
-                  <option value="Other">Other</option>
-                </select>
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Quick Select Category Badges */}
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {PAYMENT_CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all ${
-                      category === cat
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {isCategoryModified && original && (
-                <p className="text-[10px] text-violet-700 font-semibold mt-1.5">
-                  Original Category: &ldquo;{original.category || 'Other'}&rdquo;
-                </p>
-              )}
             </div>
 
             {/* Save Button */}

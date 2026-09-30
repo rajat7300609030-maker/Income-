@@ -19,7 +19,28 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getDailyMetrics, formatINR } from '../services/calculations';
-import { Transaction } from '../types';
+import { Transaction, PAYMENT_METHOD_CONFIGS } from '../types';
+import { TransactionCard } from './TransactionCard';
+
+// Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
+
+const cleanCategory = (cat?: string): string => {
+  if (!cat) return '';
+  return cat.replace(/\s*\(recv\)/gi, '').replace(/\s*\(received\)/gi, '').trim();
+};
 
 export const DailyView: React.FC = () => {
   const {
@@ -375,228 +396,18 @@ export const DailyView: React.FC = () => {
           ) : (
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
-                {dayTransactions.map((tx, idx) => {
-                  const isIncome = tx.type === 'Income';
-                  const isExpense = tx.type === 'Expense';
-                  const isPayment = tx.type === 'Payment';
-                  const isPaid = isPayment && tx.paymentDirection === 'Paid';
-
-                  // Resolve person name and type
-                  let resolvedPersonName = (tx.personName || '').trim();
-                  let resolvedPersonType = '';
-                  if (tx.personId) {
-                    const found = persons.find(p => p.id === tx.personId);
-                    if (found) {
-                      resolvedPersonName = found.name || resolvedPersonName;
-                      resolvedPersonType = found.type;
-                    }
-                  }
-                  if (!resolvedPersonType && resolvedPersonName) {
-                    const found = persons.find(p => p.name && p.name.trim().toLowerCase() === resolvedPersonName.toLowerCase());
-                    if (found) {
-                      resolvedPersonType = found.type;
-                      resolvedPersonName = found.name;
-                    }
-                  }
-                  if ((!resolvedPersonName || !resolvedPersonType) && (tx.sourceId || tx.id)) {
-                    const pay = payments.find(p => p.id === tx.sourceId || `tx_${p.id}` === tx.id);
-                    if (pay) {
-                      if (!resolvedPersonName) resolvedPersonName = pay.personName || '';
-                      if (pay.personId) {
-                        const found = persons.find(p => p.id === pay.personId);
-                        if (found) {
-                          resolvedPersonName = found.name || resolvedPersonName;
-                          resolvedPersonType = found.type;
-                        }
-                      }
-                    }
-                  }
-
-                  const cardClasses = isPayment
-                    ? 'bg-gradient-to-r from-amber-50/90 via-amber-50/50 to-white dark:from-amber-950/40 dark:via-neutral-900 dark:to-black border-amber-300 dark:border-amber-700/80 border-l-4 border-l-amber-500 hover:border-amber-400 hover:bg-amber-50/80 dark:hover:bg-amber-950/60 shadow-xs shadow-amber-500/10'
-                    : isExpense
-                    ? 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-rose-500 hover:border-rose-300 hover:bg-rose-50/10 shadow-xs'
-                    : 'bg-white dark:bg-black border-slate-200/80 dark:border-neutral-800 border-l-4 border-l-emerald-500 hover:border-emerald-300 hover:bg-emerald-50/10 shadow-xs';
-
-                  const iconBoxClasses = isIncome
-                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-300/40'
-                    : isExpense
-                    ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 ring-1 ring-rose-300/40'
-                    : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 ring-2 ring-amber-400/50';
-
-                  const amountColor = isIncome
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : isExpense
-                    ? 'text-rose-600 dark:text-rose-400'
-                    : 'text-amber-600 dark:text-amber-400';
-
-                  const amountSign = isExpense || isPaid ? '-' : '+';
-
-                  return (
-                    <motion.div
-                      key={`${tx.id || 'daily-tx'}-${idx}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: Math.min(0.3, idx * 0.04), duration: 0.2 }}
-                      whileHover={{ x: 3 }}
-                      className={`rounded-2xl p-3.5 border flex items-center justify-between transition-all ${cardClasses}`}
-                    >
-                      <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
-                        <motion.div
-                          whileHover={{ scale: 1.15, rotate: 10 }}
-                          transition={{ type: "spring", stiffness: 400 }}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${iconBoxClasses}`}
-                        >
-                          {isIncome && <ArrowDownLeft className="w-5 h-5" />}
-                          {isExpense && <ArrowUpRight className="w-5 h-5" />}
-                          {isPayment && <Handshake className="w-5 h-5" />}
-                        </motion.div>
-
-                        <div className="min-w-0 flex-1">
-                          {/* Title */}
-                          <div className="flex items-center space-x-1.5 flex-wrap">
-                            {isPayment ? (
-                              <>
-                                <h5 className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
-                                  {resolvedPersonName || tx.note || tx.category || 'Person Payment'}
-                                </h5>
-                                {resolvedPersonType && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
-                                    {resolvedPersonType}
-                                  </span>
-                                )}
-                              </>
-                            ) : isExpense ? (
-                              <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                                {tx.note || tx.category || 'Expense'}
-                              </h5>
-                            ) : (
-                              <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                                {tx.note || resolvedPersonName || 'Income'}
-                              </h5>
-                            )}
-                          </div>
-
-                          <div className="flex items-center space-x-2 text-[10px] text-slate-400 mt-0.5">
-                            <span>{tx.time || '12:00'}</span>
-                            <span>•</span>
-                            <span className="font-medium text-slate-600 dark:text-slate-300">{tx.paymentMethod}</span>
-                            {isPayment && tx.paymentDirection && (
-                              <>
-                                <span>•</span>
-                                <span className="font-bold text-amber-700 dark:text-amber-400">
-                                  {isPaid ? 'Paid to Person' : 'Received from Person'}
-                                </span>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Details row */}
-                          {isPayment ? (
-                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
-                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/70 font-bold shadow-2xs">
-                                <User className="w-3 h-3 text-amber-700 dark:text-amber-400 shrink-0" />
-                                <span className="truncate max-w-[130px]">{resolvedPersonName || 'Person'}</span>
-                              </span>
-                              {tx.category && (
-                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-white/90 dark:bg-neutral-800 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-semibold">
-                                  <Tag className="w-3 h-3 text-amber-600 shrink-0" />
-                                  <span>{tx.category}</span>
-                                </span>
-                              )}
-                              {tx.note && (
-                                <span className="text-slate-600 dark:text-slate-300 truncate max-w-[140px] italic">
-                                  "{tx.note}"
-                                </span>
-                              )}
-                            </div>
-                          ) : isExpense ? (
-                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
-                              {tx.category && (
-                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/50 dark:border-rose-900/40 font-medium">
-                                  <Tag className="w-3 h-3 text-rose-500 shrink-0" />
-                                  <span className="truncate max-w-[130px]">{tx.category}</span>
-                                </span>
-                              )}
-                              {resolvedPersonName && (
-                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 font-medium">
-                                  <User className="w-3 h-3 text-slate-500 shrink-0" />
-                                  <span className="truncate max-w-[120px]">{resolvedPersonName}</span>
-                                </span>
-                              )}
-                              {tx.note && tx.category && (
-                                <span className="text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
-                                  {tx.note}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2 text-[10px] mt-1 flex-wrap gap-y-1">
-                              {resolvedPersonName ? (
-                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/40 font-medium">
-                                  <User className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span className="truncate max-w-[130px]">{resolvedPersonName}</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/40 font-medium">
-                                  <ArrowDownLeft className="w-3 h-3 text-emerald-600 shrink-0" />
-                                  <span>Income</span>
-                                </span>
-                              )}
-                              {tx.note && (
-                                <span className="text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
-                                  {tx.note}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <p className={`text-sm font-black tracking-tight ${amountColor}`}>
-                          {amountSign}
-                          {formatINR(tx.amount)}
-                        </p>
-
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${
-                          isIncome
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60'
-                            : isExpense
-                            ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60'
-                            : 'bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-xs font-bold border border-amber-400/50'
-                        }`}>
-                          {isPayment ? (isPaid ? 'Payment (Paid)' : 'Payment (Recv)') : tx.type}
-                        </span>
-
-                      <div className="flex items-center justify-end space-x-1.5 mt-1.5">
-                        <motion.button
-                          id={`daily-edit-${tx.id}`}
-                          whileHover={{ scale: 1.15, rotate: 6 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleEdit(tx)}
-                          className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 shadow-2xs transition-all"
-                          title="Edit Record"
-                        >
-                          <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-                        </motion.button>
-                        <motion.button
-                          id={`daily-delete-${tx.id}`}
-                          whileHover={{ scale: 1.15, rotate: -6 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(tx)}
-                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 shadow-2xs transition-all"
-                          title="Delete Record"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                {dayTransactions.map((tx, idx) => (
+                  <TransactionCard
+                    key={`${tx.id || 'daily-tx'}-${idx}`}
+                    transaction={tx}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onClick={handleEdit}
+                    displayMode="time"
+                    idPrefix="daily"
+                  />
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>

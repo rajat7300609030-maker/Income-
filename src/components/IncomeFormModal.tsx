@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowDownLeft, Check, Calendar, User, Sparkles } from 'lucide-react';
+import { X, ArrowDownLeft, Check, Calendar, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { PaymentMethod, IncomeRecord } from '../types';
+import { PaymentMethod, IncomeRecord, PAYMENT_METHODS, PAYMENT_METHOD_CONFIGS } from '../types';
 
 export const IncomeFormModal: React.FC = () => {
-  const { activeModal, closeQuickAction, saveIncome, persons, editItem } = useApp();
+  const { activeModal, closeQuickAction, saveIncome, editItem } = useApp();
 
   const isOpen = activeModal === 'add_income';
   const isEditing = editItem?.type === 'income' && editItem.data;
 
-  const [personId, setPersonId] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('UPI');
@@ -21,7 +20,6 @@ export const IncomeFormModal: React.FC = () => {
     if (isEditing && editItem?.data) {
       const inc: IncomeRecord = editItem.data;
       return {
-        personId: inc.personId || '',
         amount: String(inc.amount || ''),
         date: inc.date || '',
         paymentMethod: inc.paymentMethod || 'UPI',
@@ -34,13 +32,11 @@ export const IncomeFormModal: React.FC = () => {
   useEffect(() => {
     if (isEditing && editItem?.data) {
       const inc: IncomeRecord = editItem.data;
-      setPersonId(inc.personId || '');
       setAmount(String(inc.amount || ''));
       setDate(inc.date || new Date().toISOString().split('T')[0]);
       setPaymentMethod(inc.paymentMethod || 'UPI');
       setDescription(inc.description || '');
     } else {
-      setPersonId('');
       setAmount('');
       setDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('UPI');
@@ -50,14 +46,12 @@ export const IncomeFormModal: React.FC = () => {
 
   // Track modified fields
   const isAmountModified = isEditing && original && amount !== original.amount;
-  const isPersonModified = isEditing && original && personId !== original.personId;
   const isDateModified = isEditing && original && date !== original.date;
   const isMethodModified = isEditing && original && paymentMethod !== original.paymentMethod;
   const isDescModified = isEditing && original && description !== original.description;
 
   const totalModifications = [
     isAmountModified,
-    isPersonModified,
     isDateModified,
     isMethodModified,
     isDescModified,
@@ -68,12 +62,10 @@ export const IncomeFormModal: React.FC = () => {
     const parsedAmount = parseFloat(amount);
     if (!parsedAmount || parsedAmount <= 0) return;
 
-    const matchedPerson = persons.find(p => p.id === personId);
-
     saveIncome(
       {
-        personId: personId || undefined,
-        personName: matchedPerson?.name || (isEditing && personId === original?.personId ? editItem.data.personName : undefined),
+        personId: isEditing && editItem?.data?.personId ? editItem.data.personId : undefined,
+        personName: isEditing && editItem?.data?.personName ? editItem.data.personName : undefined,
         amount: parsedAmount,
         date,
         paymentMethod,
@@ -82,8 +74,6 @@ export const IncomeFormModal: React.FC = () => {
       isEditing ? editItem.data.id : undefined
     );
   };
-
-  const paymentMethods: PaymentMethod[] = ['UPI', 'Cash', 'Bank', 'Other'];
 
   return (
     <AnimatePresence>
@@ -291,69 +281,28 @@ export const IncomeFormModal: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {paymentMethods.map(method => (
-                  <motion.button
-                    key={method}
-                    type="button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setPaymentMethod(method)}
-                    className={`py-2 px-2 text-center rounded-xl text-xs font-bold transition-all ${
-                      paymentMethod === method
-                        ? isMethodModified
-                          ? 'bg-violet-600 text-white shadow-md ring-2 ring-violet-400'
-                          : 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {method}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Select Person */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  Select Person / Client (Optional)
-                </label>
-                {isEditing && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                      isPersonModified
-                        ? 'bg-violet-100 text-violet-800 border border-violet-300 font-bold'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {isPersonModified ? 'New Client' : 'Existing Client'}
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <User
-                  className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${
-                    isPersonModified ? 'text-violet-600' : 'text-slate-400'
-                  }`}
-                />
-                <select
-                  id="income-form-person"
-                  value={personId}
-                  onChange={e => setPersonId(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-semibold outline-none appearance-none transition-all ${
-                    isPersonModified
-                      ? 'bg-violet-50 border-violet-500 text-violet-950 font-bold ring-2 ring-violet-500/20'
-                      : 'border-slate-200 text-slate-800 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20'
-                  }`}
-                >
-                  <option value="">General / Direct Cash Flow (No person)</option>
-                  {persons.map((p, idx) => (
-                    <option key={`${p.id || 'p'}-${idx}`} value={p.id}>
-                      {p.name} ({p.type}) - {p.mobile}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-3 gap-2">
+                {PAYMENT_METHODS.map(method => {
+                  const cfg = PAYMENT_METHOD_CONFIGS[method];
+                  const isSelected = paymentMethod === method;
+                  return (
+                    <motion.button
+                      key={method}
+                      type="button"
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPaymentMethod(method)}
+                      className={`py-2 px-2.5 text-center rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center space-x-1.5 ${
+                        isSelected
+                          ? cfg.activeClass
+                          : cfg.inactiveClass
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-white' : cfg.dotColor}`} />
+                      <span>{method}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
 

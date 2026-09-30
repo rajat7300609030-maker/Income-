@@ -2,12 +2,33 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Handshake, Search, ArrowDownLeft, ArrowUpRight, Clock, Hash, Calendar, Edit2, Trash2, User, ArrowLeft, Tag, Wallet } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { PaymentDirection, PaymentRecord } from '../types';
+import { PaymentDirection, PaymentRecord, PaymentMethod, PAYMENT_METHODS, PAYMENT_METHOD_CONFIGS } from '../types';
 import { formatINR, calculatePersonSummary } from '../services/calculations';
+
+// Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
+const cleanPaymentNote = (note?: string): string => {
+  if (!note) return '';
+  return note
+    .replace(/\s*\(recv\)/gi, '')
+    .replace(/\s*\(received\)/gi, '')
+    .replace(/\s*\(paid\)/gi, '')
+    .replace(/\s*received\s+for\s+person/gi, '')
+    .replace(/\s*received\s+for\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+received\s+from\s+[^\n•]+/gi, '')
+    .replace(/\s*payment\s+made\s+to\s+[^\n•]+/gi, '')
+    .replace(/\s*recv\b/gi, '')
+    .trim();
+};
+
+const cleanCategory = (cat?: string): string => {
+  if (!cat) return '';
+  return cat.replace(/\s*\(recv\)/gi, '').replace(/\s*\(received\)/gi, '').trim();
+};
 
 export const PaymentsView: React.FC = () => {
   const { payments, openQuickAction, startEditItem, openDeleteConfirm, deletePayment, setSelectedPersonForProfile, persons, setCurrentView, goBack, totals, income, expenses } = useApp();
   const [activeTab, setActiveTab] = useState<PaymentDirection | 'All'>('All');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredPayments = useMemo(() => {
@@ -16,15 +37,16 @@ export const PaymentsView: React.FC = () => {
     return list.filter(p => {
       if (!p) return false;
       const matchesTab = activeTab === 'All' || p.type === activeTab;
+      const matchesMethod = selectedPaymentMethod === 'All' || p.paymentMethod === selectedPaymentMethod;
       const matchesSearch =
         !q ||
         (p.personName && p.personName.toLowerCase().includes(q)) ||
         (p.category && p.category.toLowerCase().includes(q)) ||
         (p.referenceNumber && p.referenceNumber.toLowerCase().includes(q)) ||
         (p.note && p.note.toLowerCase().includes(q));
-      return matchesTab && matchesSearch;
+      return matchesTab && matchesMethod && matchesSearch;
     });
-  }, [payments, activeTab, searchQuery]);
+  }, [payments, activeTab, selectedPaymentMethod, searchQuery]);
 
   const totalReceived = useMemo(() => {
     return (payments || [])
@@ -193,7 +215,7 @@ export const PaymentsView: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative mb-2">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             id="payments-search-input"
@@ -203,6 +225,40 @@ export const PaymentsView: React.FC = () => {
             placeholder="Search by person, ref no, or note..."
             className="w-full pl-10 pr-4 py-1.5 rounded-xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs font-medium text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-black focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
           />
+        </div>
+
+        {/* Payment Modes Filter Bar */}
+        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setSelectedPaymentMethod('All')}
+            className={`py-1 px-2 text-center rounded-lg text-[10.5px] font-bold transition-all border shrink-0 cursor-pointer ${
+              selectedPaymentMethod === 'All'
+                ? 'bg-slate-800 text-white border-slate-700 shadow-xs'
+                : 'bg-white dark:bg-black text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neutral-800 hover:bg-slate-100'
+            }`}
+          >
+            All Modes
+          </button>
+          {PAYMENT_METHODS.map(method => {
+            const cfg = PAYMENT_METHOD_CONFIGS[method];
+            const isSelected = selectedPaymentMethod === method;
+            return (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setSelectedPaymentMethod(method)}
+                className={`py-1 px-2 text-center rounded-lg text-[10.5px] font-bold transition-all border shrink-0 cursor-pointer flex items-center space-x-1 ${
+                  isSelected
+                    ? cfg.activeClass
+                    : cfg.inactiveClass
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isSelected ? 'bg-white' : cfg.dotColor}`} />
+                <span>{method}</span>
+              </button>
+            );
+          })}
         </div>
       </motion.div>
 
@@ -280,13 +336,17 @@ export const PaymentsView: React.FC = () => {
                             <span>{p.date}</span>
                           </span>
                           <span>•</span>
-                          <span className="font-semibold text-slate-600">{p.paymentMethod}</span>
+                          <span className={`font-semibold px-1.5 py-0.2 rounded text-[9.5px] ${
+                            PAYMENT_METHOD_CONFIGS[p.paymentMethod]?.badgeClass || 'text-slate-600'
+                          }`}>
+                            {p.paymentMethod}
+                          </span>
                         </div>
 
-                        {p.category && (
+                        {cleanCategory(p.category) && (
                           <div className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 mt-1">
                             <Tag className="w-2.5 h-2.5 text-amber-600" />
-                            <span>{p.category}</span>
+                            <span>{cleanCategory(p.category)}</span>
                           </div>
                         )}
 
@@ -297,9 +357,9 @@ export const PaymentsView: React.FC = () => {
                           </div>
                         )}
 
-                        {p.note && (
+                        {cleanPaymentNote(p.note) && (
                           <p className="text-[11px] text-slate-600 mt-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-100 leading-snug">
-                            {p.note}
+                            {cleanPaymentNote(p.note)}
                           </p>
                         )}
                       </div>
