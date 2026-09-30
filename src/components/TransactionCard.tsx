@@ -225,7 +225,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             {isPayment ? (
               <>
                 <h5 className="text-xs font-black text-amber-950 dark:text-amber-200 truncate">
-                  {resolvedPersonName || cleanCategory(tx.category) || 'Payment'}
+                  {resolvedPersonName || 'Payment'}
                 </h5>
                 {resolvedPersonType && (
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
@@ -236,7 +236,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             ) : isExpense ? (
               <>
                 <h5 className="text-xs font-black text-rose-950 dark:text-rose-200 truncate">
-                  {tx.category || tx.note || 'Expense'}
+                  {tx.note || 'Expense'}
                 </h5>
                 {resolvedPersonName && (
                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200 border border-rose-300/60">
@@ -258,39 +258,32 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             )}
           </div>
 
-          {/* Meta row: Date with Glowing Animation (DD/MM/YYYY) • Payment Mode badge */}
+          {/* Meta row: Date with Glowing Animation (DD/MM/YYYY strictly - NO TIME) • Payment Mode badge */}
           <div className="flex items-center space-x-2 text-[10px] text-slate-400 mt-1 flex-wrap gap-y-1">
-            {displayMode === 'time' ? (
-              <span className="flex items-center space-x-1 font-mono text-[10px] text-slate-400">
-                <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                <span>{tx.time || '12:00'}</span>
-              </span>
-            ) : (
-              <motion.span
-                animate={{
-                  boxShadow: [
-                    '0 0 0px rgba(59, 130, 246, 0.2)',
-                    '0 0 10px rgba(59, 130, 246, 0.65)',
-                    '0 0 0px rgba(59, 130, 246, 0.2)',
-                  ],
-                  borderColor: [
-                    'rgba(147, 197, 253, 0.6)',
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(147, 197, 253, 0.6)',
-                  ],
-                }}
-                transition={{
-                  duration: 2.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg font-mono text-[10.5px] font-black text-blue-700 dark:text-blue-300 bg-blue-50/90 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-700/80 shadow-xs"
-                title={`Date: ${formatDDMMYYYY(tx.date)}`}
-              >
-                <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>{formatDDMMYYYY(tx.date)}</span>
-              </motion.span>
-            )}
+            <motion.span
+              animate={{
+                boxShadow: [
+                  '0 0 0px rgba(59, 130, 246, 0.2)',
+                  '0 0 10px rgba(59, 130, 246, 0.75)',
+                  '0 0 0px rgba(59, 130, 246, 0.2)',
+                ],
+                borderColor: [
+                  'rgba(147, 197, 253, 0.6)',
+                  'rgba(59, 130, 246, 1)',
+                  'rgba(147, 197, 253, 0.6)',
+                ],
+              }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg font-mono text-[10.5px] font-black text-blue-700 dark:text-blue-300 bg-blue-50/90 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-700/80 shadow-xs"
+              title={`Date: ${formatDDMMYYYY(tx.date)}`}
+            >
+              <Calendar className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span>{formatDDMMYYYY(tx.date)}</span>
+            </motion.span>
             <span>•</span>
             <span
               className={`font-semibold px-1.5 py-0.2 rounded text-[9.5px] ${
@@ -302,31 +295,31 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             </span>
           </div>
 
-          {/* Details row: Note text (tags removed as requested) */}
+          {/* Details row: Note text shown directly (Tags completely removed as requested) */}
           {isPayment ? (
             cleanPaymentNote(tx.note) ? (
-              <div className="flex items-center space-x-1.5 text-[10px] mt-1 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-amber-800 dark:text-amber-300">Note:</span>
-                <span className="truncate max-w-[220px] italic">
-                  "{cleanPaymentNote(tx.note)}"
+              <div className="flex items-center space-x-1.5 text-[10.5px] mt-1 text-slate-700 dark:text-slate-200">
+                <span className="font-bold text-amber-800 dark:text-amber-300 shrink-0">Note:</span>
+                <span className="truncate max-w-[220px] font-medium text-slate-700 dark:text-slate-300">
+                  {cleanPaymentNote(tx.note)}
                 </span>
               </div>
             ) : null
           ) : isExpense ? (
             tx.note ? (
-              <div className="flex items-center space-x-1.5 text-[10px] mt-1 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-rose-800 dark:text-rose-300">Note:</span>
-                <span className="truncate max-w-[220px] italic">
-                  "{tx.note}"
+              <div className="flex items-center space-x-1.5 text-[10.5px] mt-1 text-slate-700 dark:text-slate-200">
+                <span className="font-bold text-rose-800 dark:text-rose-300 shrink-0">Note:</span>
+                <span className="truncate max-w-[220px] font-medium text-slate-700 dark:text-slate-300">
+                  {tx.note}
                 </span>
               </div>
             ) : null
           ) : (
             tx.note ? (
-              <div className="flex items-center space-x-1.5 text-[10px] mt-1 text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-emerald-800 dark:text-emerald-300">Note:</span>
-                <span className="truncate max-w-[220px] italic">
-                  "{tx.note}"
+              <div className="flex items-center space-x-1.5 text-[10.5px] mt-1 text-slate-700 dark:text-slate-200">
+                <span className="font-bold text-emerald-800 dark:text-emerald-300 shrink-0">Note:</span>
+                <span className="truncate max-w-[220px] font-medium text-slate-700 dark:text-slate-300">
+                  {tx.note}
                 </span>
               </div>
             ) : null
@@ -345,24 +338,24 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                 ? '0 0 0px rgba(244, 63, 94, 0.2)'
                 : '0 0 0px rgba(245, 158, 11, 0.2)',
               isIncome
-                ? '0 0 10px rgba(16, 185, 129, 0.9), 0 0 18px rgba(16, 185, 129, 0.5)'
+                ? '0 0 10px rgba(16, 185, 129, 0.9), 0 0 18px rgba(16, 185, 129, 0.6)'
                 : isExpense || isPaid
-                ? '0 0 10px rgba(244, 63, 94, 0.9), 0 0 18px rgba(244, 63, 94, 0.5)'
-                : '0 0 10px rgba(245, 158, 11, 0.9), 0 0 18px rgba(245, 158, 11, 0.5)',
+                ? '0 0 10px rgba(244, 63, 94, 0.9), 0 0 18px rgba(244, 63, 94, 0.6)'
+                : '0 0 10px rgba(245, 158, 11, 0.9), 0 0 18px rgba(245, 158, 11, 0.6)',
               isIncome
                 ? '0 0 0px rgba(16, 185, 129, 0.2)'
                 : isExpense || isPaid
                 ? '0 0 0px rgba(244, 63, 94, 0.2)'
                 : '0 0 0px rgba(245, 158, 11, 0.2)',
             ],
-            scale: [1, 1.04, 1],
+            scale: [1, 1.05, 1],
           }}
           transition={{
             duration: 2.2,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className={`text-sm sm:text-base font-black tracking-tight font-mono ${amountColor}`}
+          className={`text-sm sm:text-base font-black tracking-tight font-mono drop-shadow-xs ${amountColor}`}
         >
           {amountSign}
           {formatINR(tx.amount)}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, Phone, ArrowRight, ArrowLeft, UserCheck, Plus, ChevronRight, AlertCircle, Building2, User, Edit2, Trash2, Calendar, ArrowDownLeft, ArrowUpRight, Handshake, CheckCircle2, Layers, Briefcase, Palmtree, Lock, Unlock, Percent, Activity, Palette, Sparkles, X, Check } from 'lucide-react';
+import { Search, Filter, Phone, ArrowRight, ArrowLeft, UserCheck, Plus, ChevronRight, AlertCircle, Building2, User, Edit2, Trash2, Calendar, ArrowDownLeft, ArrowUpRight, Handshake, CheckCircle2, Layers, Briefcase, Palmtree, Lock, Unlock, Percent, Activity, Palette, Sparkles, X, Check, Wallet, Clock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Person, PersonCalculations, PersonType } from '../types';
 import { calculatePersonSummary, formatINR } from '../services/calculations';
@@ -43,6 +43,36 @@ export const PersonsView: React.FC = () => {
       summary: calculatePersonSummary(p, income, expenses, payments),
     }));
   }, [persons, income, expenses, payments]);
+
+  // Aggregate stats across persons: Total Person, Total Salary, Total Paid, Due Salary
+  const personSalaryStats = useMemo(() => {
+    const totalPersons = (persons || []).length;
+    let totalSalary = 0;
+    let totalPaid = 0;
+    let dueSalary = 0;
+
+    personsWithCalculations.forEach(({ person: p, summary: s }) => {
+      const salary = (s.totalSalary && s.totalSalary > 0)
+        ? s.totalSalary
+        : (Number(p.salaryAmount) > 0 ? Number(p.salaryAmount) : 0);
+      
+      totalSalary += salary;
+      totalPaid += (s.totalPaid || 0);
+
+      if (s.dueSalary && s.dueSalary > 0) {
+        dueSalary += s.dueSalary;
+      } else if (s.status === 'to_pay' && (p.salaryAmount || p.salaryType || s.totalSalary)) {
+        dueSalary += (s.pendingAmount || 0);
+      }
+    });
+
+    return {
+      totalPersons,
+      totalSalary,
+      totalPaid,
+      dueSalary,
+    };
+  }, [persons, personsWithCalculations]);
 
   const filteredPersons = useMemo(() => {
     return personsWithCalculations.filter(({ person: p }) => {
@@ -217,6 +247,111 @@ export const PersonsView: React.FC = () => {
 
       {/* Person List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Person & Salary Summary Overview Card */}
+        <motion.div
+          id="persons-salary-overview-card"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-neutral-950 dark:via-neutral-900 dark:to-black text-white shadow-xl shadow-indigo-950/25 border border-indigo-500/20 dark:border-neutral-800 relative overflow-hidden"
+        >
+          {/* Ambient background glow accents */}
+          <div className="absolute -top-10 -right-10 w-36 h-36 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-fuchsia-500/15 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 rounded-xl bg-white/10 dark:bg-white/5 backdrop-blur-xs flex items-center justify-center text-indigo-300 border border-white/10 shadow-xs">
+                <Briefcase className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black tracking-wider uppercase text-white flex items-center space-x-1.5">
+                  <span>Person &amp; Salary Overview</span>
+                  <span className="px-1.5 py-0.2 rounded-md bg-indigo-500/30 text-[8.5px] font-bold text-indigo-200 border border-indigo-400/30">
+                    SUMMARY
+                  </span>
+                </h3>
+              </div>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400">
+              {personSalaryStats.totalPersons} Registered Contacts
+            </span>
+          </div>
+
+          {/* 4 Metric Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 relative z-10">
+            {/* Total Person */}
+            <div className="p-2.5 rounded-2xl bg-white/5 dark:bg-neutral-900/60 backdrop-blur-xs border border-white/10 dark:border-neutral-800 hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between text-slate-300 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Person</span>
+                <div className="w-5 h-5 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center">
+                  <User className="w-3 h-3" />
+                </div>
+              </div>
+              <p className="text-base sm:text-lg font-black text-white tracking-tight">
+                {personSalaryStats.totalPersons}
+              </p>
+              <p className="text-[9px] text-slate-400 mt-0.5">Active contacts</p>
+            </div>
+
+            {/* Total Salary */}
+            <div className="p-2.5 rounded-2xl bg-white/5 dark:bg-neutral-900/60 backdrop-blur-xs border border-white/10 dark:border-neutral-800 hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between text-fuchsia-300 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-300">Total Salary</span>
+                <div className="w-5 h-5 rounded-lg bg-fuchsia-500/20 text-fuchsia-300 flex items-center justify-center">
+                  <Wallet className="w-3 h-3" />
+                </div>
+              </div>
+              <p className="text-sm sm:text-base font-black text-fuchsia-300 tracking-tight font-mono">
+                {formatINR(personSalaryStats.totalSalary)}
+              </p>
+              <p className="text-[9px] text-slate-400 mt-0.5">Accrued / Monthly</p>
+            </div>
+
+            {/* Total Paid */}
+            <div className="p-2.5 rounded-2xl bg-white/5 dark:bg-neutral-900/60 backdrop-blur-xs border border-white/10 dark:border-neutral-800 hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between text-emerald-300 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Total Paid</span>
+                <div className="w-5 h-5 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                  <CheckCircle2 className="w-3 h-3" />
+                </div>
+              </div>
+              <p className="text-sm sm:text-base font-black text-emerald-300 tracking-tight font-mono">
+                {formatINR(personSalaryStats.totalPaid)}
+              </p>
+              <p className="text-[9px] text-slate-400 mt-0.5">Disbursed amount</p>
+            </div>
+
+            {/* Due Salary */}
+            <div className="p-2.5 rounded-2xl bg-rose-500/10 dark:bg-rose-950/30 backdrop-blur-xs border border-rose-500/30 hover:bg-rose-500/15 transition-colors">
+              <div className="flex items-center justify-between text-rose-300 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300">Due Salary</span>
+                <div className="w-5 h-5 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center">
+                  <Clock className="w-3 h-3" />
+                </div>
+              </div>
+              <motion.p
+                animate={{
+                  textShadow: [
+                    '0 0 0px rgba(244, 63, 94, 0.2)',
+                    '0 0 8px rgba(244, 63, 94, 0.8)',
+                    '0 0 0px rgba(244, 63, 94, 0.2)',
+                  ],
+                }}
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="text-sm sm:text-base font-black text-rose-300 tracking-tight font-mono"
+              >
+                {formatINR(personSalaryStats.dueSalary)}
+              </motion.p>
+              <p className="text-[9px] text-rose-300/80 mt-0.5">Pending to pay</p>
+            </div>
+          </div>
+        </motion.div>
+
         {filteredPersons.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

@@ -403,7 +403,7 @@ export const DailyView: React.FC = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onClick={handleEdit}
-                    displayMode="time"
+                    displayMode="date"
                     idPrefix="daily"
                   />
                 ))}

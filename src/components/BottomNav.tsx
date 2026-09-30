@@ -72,7 +72,7 @@ export const BottomNav: React.FC = () => {
             >
               <motion.span
                 whileHover={{ scale: 1.05 }}
-                className="bg-white text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-lg shadow-md border border-slate-100"
+                className="bg-gradient-to-r from-emerald-50 via-emerald-50/70 to-white dark:from-emerald-950/70 dark:via-neutral-900 dark:to-black text-emerald-950 dark:text-emerald-200 text-xs font-black px-3 py-1.5 rounded-xl shadow-md border border-emerald-300 dark:border-emerald-700/80 border-l-4 border-l-emerald-500"
               >
                 Add Income
               </motion.span>
@@ -81,7 +81,7 @@ export const BottomNav: React.FC = () => {
                 whileHover={{ scale: 1.15, rotate: 10 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleAction('add_income')}
-                className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/40 hover:bg-emerald-700 transition-colors"
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/40 ring-2 ring-emerald-400/50 hover:brightness-110 transition-all cursor-pointer"
               >
                 <ArrowDownLeft className="w-5 h-5" />
               </motion.button>
@@ -98,7 +98,7 @@ export const BottomNav: React.FC = () => {
             >
               <motion.span
                 whileHover={{ scale: 1.05 }}
-                className="bg-white text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-lg shadow-md border border-slate-100"
+                className="bg-gradient-to-r from-rose-50 via-rose-50/70 to-white dark:from-rose-950/70 dark:via-neutral-900 dark:to-black text-rose-950 dark:text-rose-200 text-xs font-black px-3 py-1.5 rounded-xl shadow-md border border-rose-300 dark:border-rose-700/80 border-l-4 border-l-rose-500"
               >
                 Add Expense
               </motion.span>
@@ -107,7 +107,7 @@ export const BottomNav: React.FC = () => {
                 whileHover={{ scale: 1.15, rotate: -10 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleAction('add_expense')}
-                className="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-600/40 hover:bg-rose-700 transition-colors"
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-rose-500 via-rose-600 to-red-600 text-white flex items-center justify-center shadow-lg shadow-rose-600/40 ring-2 ring-rose-400/50 hover:brightness-110 transition-all cursor-pointer"
               >
                 <ArrowUpRight className="w-5 h-5" />
               </motion.button>
@@ -124,7 +124,7 @@ export const BottomNav: React.FC = () => {
             >
               <motion.span
                 whileHover={{ scale: 1.05 }}
-                className="bg-white text-slate-800 text-xs font-semibold px-2.5 py-1 rounded-lg shadow-md border border-slate-100"
+                className="bg-gradient-to-r from-amber-50 via-amber-50/70 to-white dark:from-amber-950/70 dark:via-neutral-900 dark:to-black text-amber-950 dark:text-amber-200 text-xs font-black px-3 py-1.5 rounded-xl shadow-md border border-amber-300 dark:border-amber-700/80 border-l-4 border-l-amber-500"
               >
                 Add Payment
               </motion.span>
@@ -133,7 +133,7 @@ export const BottomNav: React.FC = () => {
                 whileHover={{ scale: 1.15, rotate: 15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleAction('add_payment')}
-                className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/40 hover:bg-amber-600 transition-colors"
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-amber-500/40 ring-2 ring-amber-400/50 hover:brightness-110 transition-all cursor-pointer"
               >
                 <Handshake className="w-5 h-5" />
               </motion.button>
@@ -150,7 +150,7 @@ export const BottomNav: React.FC = () => {
             >
               <motion.span
                 whileHover={{ scale: 1.05 }}
-                className="bg-white dark:bg-black text-slate-800 dark:text-white text-xs font-semibold px-2.5 py-1 rounded-lg shadow-md border border-slate-100 dark:border-neutral-800"
+                className="bg-gradient-to-r from-blue-50 via-blue-50/70 to-white dark:from-blue-950/70 dark:via-neutral-900 dark:to-black text-blue-950 dark:text-blue-200 text-xs font-black px-3 py-1.5 rounded-xl shadow-md border border-blue-300 dark:border-blue-700/80 border-l-4 border-l-blue-500"
               >
                 Add Person
               </motion.span>
@@ -159,7 +159,7 @@ export const BottomNav: React.FC = () => {
                 whileHover={{ scale: 1.15, rotate: -15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => handleAction('add_person')}
-                className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/40 hover:bg-blue-700 transition-colors"
+                className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/40 ring-2 ring-blue-400/50 hover:brightness-110 transition-all cursor-pointer"
               >
                 <UserPlus className="w-5 h-5" />
               </motion.button>

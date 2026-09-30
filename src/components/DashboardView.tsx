@@ -504,101 +504,117 @@ export const DashboardView: React.FC = () => {
         <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-white/10 pointer-events-none blur-2xl" />
       </motion.div>
 
-      {/* 2. Colorful Quick Actions Bar */}
+      {/* 2. Colorful Quick Actions Bar with Transaction History Cards Styling */}
       <motion.div
         id="quick-actions-bar"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="bg-white/90 dark:bg-black backdrop-blur-xs rounded-2xl p-3 border border-slate-100 dark:border-neutral-800 shadow-sm"
+        className="bg-white/90 dark:bg-black backdrop-blur-xs rounded-3xl p-3 sm:p-3.5 border border-slate-100 dark:border-neutral-800 shadow-sm"
       >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
-            Quick Actions
-          </h3>
+        <div className="flex items-center justify-between mb-2.5 px-0.5">
+          <div className="flex items-center space-x-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+              Quick Actions
+            </h3>
+          </div>
+          <span className="text-[10px] font-bold text-slate-400">Tap to record</span>
         </div>
-        <div className="grid grid-cols-4 gap-2">
-          {/* Add Person */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+          {/* Add Person Button */}
           <motion.button
             id="quick-action-add-person"
-            whileHover={{ y: -3, scale: 1.04 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ y: -3, scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             onClick={() => openQuickAction('add_person')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-50/80 dark:bg-black border border-slate-100 dark:border-neutral-800 hover:border-blue-300 transition-all group cursor-pointer"
+            className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-50/90 via-blue-50/50 to-white dark:from-blue-950/40 dark:via-neutral-900 dark:to-black border border-blue-300 dark:border-blue-700/80 border-l-4 border-l-blue-500 hover:border-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-950/60 shadow-xs shadow-blue-500/10 transition-all group cursor-pointer"
           >
             <motion.div
               whileHover={{ rotate: [0, -10, 10, -5, 0], scale: 1.15 }}
               transition={{ duration: 0.35 }}
-              className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1 shadow-xs"
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-400/50 flex items-center justify-center mb-1.5"
             >
               <UserPlus className="w-4.5 h-4.5" />
             </motion.div>
-            <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
+            <span className="text-[11px] sm:text-xs font-black text-blue-950 dark:text-blue-200 leading-tight text-center">
               Add Person
+            </span>
+            <span className="mt-1 text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 border border-blue-300/60">
+              + Contact
             </span>
           </motion.button>
 
-          {/* Add Income */}
+          {/* Add Income Button */}
           <motion.button
             id="quick-action-add-income"
-            whileHover={{ y: -3, scale: 1.04 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ y: -3, scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             onClick={() => openQuickAction('add_income')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-50/80 dark:bg-black border border-slate-100 dark:border-neutral-800 hover:border-emerald-300 transition-all group cursor-pointer"
+            className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-emerald-50/50 to-white dark:from-emerald-950/40 dark:via-neutral-900 dark:to-black border border-emerald-300 dark:border-emerald-700/80 border-l-4 border-l-emerald-500 hover:border-emerald-400 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/60 shadow-xs shadow-emerald-500/10 transition-all group cursor-pointer"
           >
             <motion.div
               whileHover={{ rotate: [0, -10, 10, -5, 0], scale: 1.15 }}
               transition={{ duration: 0.35 }}
-              className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1 shadow-xs"
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/50 flex items-center justify-center mb-1.5"
             >
               <ArrowDownLeft className="w-4.5 h-4.5" />
             </motion.div>
-            <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
+            <span className="text-[11px] sm:text-xs font-black text-emerald-950 dark:text-emerald-200 leading-tight text-center">
               Add Income
+            </span>
+            <span className="mt-1 text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 border border-emerald-300/60">
+              + Inflow
             </span>
           </motion.button>
 
-          {/* Add Expense */}
+          {/* Add Expense Button */}
           <motion.button
             id="quick-action-add-expense"
-            whileHover={{ y: -3, scale: 1.04 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ y: -3, scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             onClick={() => openQuickAction('add_expense')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-50/80 dark:bg-black border border-slate-100 dark:border-neutral-800 hover:border-rose-300 transition-all group cursor-pointer"
+            className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-rose-50/90 via-rose-50/50 to-white dark:from-rose-950/40 dark:via-neutral-900 dark:to-black border border-rose-300 dark:border-rose-700/80 border-l-4 border-l-rose-500 hover:border-rose-400 hover:bg-rose-50/80 dark:hover:bg-rose-950/60 shadow-xs shadow-rose-500/10 transition-all group cursor-pointer"
           >
             <motion.div
               whileHover={{ rotate: [0, -10, 10, -5, 0], scale: 1.15 }}
               transition={{ duration: 0.35 }}
-              className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1 shadow-xs"
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 via-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30 ring-2 ring-rose-400/50 flex items-center justify-center mb-1.5"
             >
               <ArrowUpRight className="w-4.5 h-4.5" />
             </motion.div>
-            <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
+            <span className="text-[11px] sm:text-xs font-black text-rose-950 dark:text-rose-200 leading-tight text-center">
               Add Expense
+            </span>
+            <span className="mt-1 text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200 border border-rose-300/60">
+              - Outflow
             </span>
           </motion.button>
 
-          {/* Add Payment */}
+          {/* Add Payment Button */}
           <motion.button
             id="quick-action-add-payment"
-            whileHover={{ y: -3, scale: 1.04 }}
-            whileTap={{ scale: 0.94 }}
+            whileHover={{ y: -3, scale: 1.03 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             onClick={() => openQuickAction('add_payment')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-50/80 dark:bg-black border border-slate-100 dark:border-neutral-800 hover:border-amber-300 transition-all group cursor-pointer"
+            className="flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-amber-50/90 via-amber-50/50 to-white dark:from-amber-950/40 dark:via-neutral-900 dark:to-black border border-amber-300 dark:border-amber-700/80 border-l-4 border-l-amber-500 hover:border-amber-400 hover:bg-amber-50/80 dark:hover:bg-amber-950/60 shadow-xs shadow-amber-500/10 transition-all group cursor-pointer"
           >
             <motion.div
               whileHover={{ rotate: [0, -10, 10, -5, 0], scale: 1.15 }}
               transition={{ duration: 0.35 }}
-              className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1 shadow-xs"
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 ring-2 ring-amber-400/50 flex items-center justify-center mb-1.5"
             >
               <Handshake className="w-4.5 h-4.5" />
             </motion.div>
-            <span className="text-[10.5px] font-bold text-slate-700 dark:text-slate-200 leading-tight text-center">
+            <span className="text-[11px] sm:text-xs font-black text-amber-950 dark:text-amber-200 leading-tight text-center">
               Add Payment
+            </span>
+            <span className="mt-1 text-[8.5px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-300/60">
+              ⇄ Transfer
             </span>
           </motion.button>
         </div>
