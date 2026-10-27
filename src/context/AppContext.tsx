@@ -37,6 +37,7 @@ import {
   FirestoreSync,
 } from '../services/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { admobService, AdMobConfig } from '../services/admobService';
 
 interface ToastMessage {
   id: string;
@@ -176,6 +177,20 @@ interface AppContextType {
     syncQueueCount: number;
     syncNow: () => void;
   };
+
+  // Google AdMob Integration & Controls
+  adConfig: AdMobConfig;
+  updateAdConfig: (config: Partial<AdMobConfig>) => void;
+  showInterstitialAd: () => void;
+  showRewardedAd: (rewardTitle?: string, onReward?: () => void) => void;
+  isInterstitialOpen: boolean;
+  closeInterstitial: () => void;
+  isRewardedOpen: boolean;
+  closeRewarded: () => void;
+  rewardedTitle: string;
+  isPrivacyModalOpen: boolean;
+  openPrivacyModal: () => void;
+  closePrivacyModal: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -296,6 +311,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isOnline, setIsOnline] = useState<boolean>(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(() => auth.currentUser);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(false);
+
+  // Google AdMob State & Handlers
+  const [adConfig, setAdConfigState] = useState<AdMobConfig>(() => admobService.getConfig());
+  const [isInterstitialOpen, setIsInterstitialOpen] = useState<boolean>(false);
+  const [isRewardedOpen, setIsRewardedOpen] = useState<boolean>(false);
+  const [rewardedTitle, setRewardedTitle] = useState<string>('Premium Reward');
+  const [rewardCallback, setRewardCallback] = useState<(() => void) | null>(null);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
+
+  const updateAdConfig = useCallback((newConfig: Partial<AdMobConfig>) => {
+    const updated = admobService.saveConfig(newConfig);
+    setAdConfigState(updated);
+  }, []);
+
+  const showInterstitialAd = useCallback(() => {
+    if (adConfig.enabled) {
+      setIsInterstitialOpen(true);
+    }
+  }, [adConfig.enabled]);
+
+  const closeInterstitial = useCallback(() => {
+    setIsInterstitialOpen(false);
+  }, []);
+
+  const showRewardedAd = useCallback((title: string = 'Premium Feature', onReward?: () => void) => {
+    setRewardedTitle(title);
+    if (onReward) {
+      setRewardCallback(() => onReward);
+    } else {
+      setRewardCallback(null);
+    }
+    setIsRewardedOpen(true);
+  }, []);
+
+  const closeRewarded = useCallback(() => {
+    setIsRewardedOpen(false);
+    if (rewardCallback) {
+      rewardCallback();
+      setRewardCallback(null);
+    }
+  }, [rewardCallback]);
+
+  const openPrivacyModal = useCallback(() => setIsPrivacyModalOpen(true), []);
+  const closePrivacyModal = useCallback(() => setIsPrivacyModalOpen(false), []);
+
+  const checkAndTriggerInterstitial = useCallback(() => {
+    if (admobService.shouldShowInterstitial()) {
+      setTimeout(() => {
+        setIsInterstitialOpen(true);
+      }, 600);
+    }
+  }, []);
 
   // Listen to Firebase Auth state
   useEffect(() => {
@@ -917,6 +984,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast(`Added Income of ₹${incomeData.amount.toLocaleString('en-IN')}`);
     }
     closeQuickAction();
+    checkAndTriggerInterstitial();
   };
 
   const deleteIncome = (id: string) => {
@@ -961,6 +1029,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast(`Added Expense of ₹${expenseData.amount.toLocaleString('en-IN')}`);
     }
     closeQuickAction();
+    checkAndTriggerInterstitial();
   };
 
   const deleteExpense = (id: string) => {
@@ -1005,6 +1074,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast(`Recorded ₹${paymentData.amount.toLocaleString('en-IN')} ${paymentData.type} payment`);
     }
     closeQuickAction();
+    checkAndTriggerInterstitial();
   };
 
   const deletePayment = (id: string) => {
@@ -1414,6 +1484,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           syncQueueCount: 0,
           syncNow,
         },
+        adConfig,
+        updateAdConfig,
+        showInterstitialAd,
+        showRewardedAd,
+        isInterstitialOpen,
+        closeInterstitial,
+        isRewardedOpen,
+        closeRewarded,
+        rewardedTitle,
+        isPrivacyModalOpen,
+        openPrivacyModal,
+        closePrivacyModal,
       }}
     >
       {children}

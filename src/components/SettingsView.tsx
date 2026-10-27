@@ -45,10 +45,15 @@ import {
   ShieldAlert,
   Key,
   CheckCircle2,
+  Award,
+  Tv,
+  HelpCircle,
+  Sliders,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { storage } from '../services/storage';
 import { InstallAppModal } from './InstallAppModal';
+import { GOOGLE_ADMOB_TEST_IDS } from '../services/admobService';
 
 export const SettingsView: React.FC = () => {
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -80,6 +85,11 @@ export const SettingsView: React.FC = () => {
     isDark,
     setTheme,
     toggleDarkMode,
+    adConfig,
+    updateAdConfig,
+    showInterstitialAd,
+    showRewardedAd,
+    openPrivacyModal,
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +151,42 @@ export const SettingsView: React.FC = () => {
     setIsCopied(true);
     notify('Profile card details copied to clipboard!', 'info');
     setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  // Google AdMob States & Handlers
+  const [isAdMobExpanded, setIsAdMobExpanded] = useState(false);
+  const [publisherIdInput, setPublisherIdInput] = useState(adConfig?.publisherId || 'pub-3478133934097048');
+  const [appIdInput, setAppIdInput] = useState(adConfig?.appId || 'ca-app-pub-3478133934097048~9343028119');
+  const [bannerIdInput, setBannerIdInput] = useState(adConfig?.bannerAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+  const [interstitialIdInput, setInterstitialIdInput] = useState(adConfig?.interstitialAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+  const [rewardedIdInput, setRewardedIdInput] = useState(adConfig?.rewardedAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+  const [isSavingAdMob, setIsSavingAdMob] = useState(false);
+  const [showAdMobGuide, setShowAdMobGuide] = useState(false);
+
+  useEffect(() => {
+    if (adConfig) {
+      setPublisherIdInput(adConfig.publisherId || 'pub-3478133934097048');
+      setAppIdInput(adConfig.appId || 'ca-app-pub-3478133934097048~9343028119');
+      setBannerIdInput(adConfig.bannerAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+      setInterstitialIdInput(adConfig.interstitialAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+      setRewardedIdInput(adConfig.rewardedAdUnitId || 'ca-app-pub-3478133934097048/4514915255');
+    }
+  }, [adConfig]);
+
+  const handleSaveAdMobIds = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingAdMob(true);
+    updateAdConfig({
+      publisherId: publisherIdInput.trim() || undefined,
+      appId: appIdInput.trim() || undefined,
+      bannerAdUnitId: bannerIdInput.trim() || undefined,
+      interstitialAdUnitId: interstitialIdInput.trim() || undefined,
+      rewardedAdUnitId: rewardedIdInput.trim() || undefined,
+    });
+    setTimeout(() => {
+      setIsSavingAdMob(false);
+      notify('AdMob configuration updated successfully!', 'success');
+    }, 300);
   };
 
   // Biometric App Lock States & Handlers
@@ -2160,6 +2206,317 @@ export const SettingsView: React.FC = () => {
           </div>
           <ChevronRight className="w-4 h-4 text-rose-300 dark:text-rose-500" />
         </motion.div>
+      </motion.div>
+
+      {/* 4.5 Google AdMob Ads & Monetization Control Center */}
+      <motion.div
+        id="settings-admob-card"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        whileHover={{ y: -2 }}
+        className="bg-white dark:bg-black rounded-3xl p-5 border border-slate-100 dark:border-neutral-800 shadow-xs space-y-4 hover:shadow-md transition-all relative overflow-hidden"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 flex items-center justify-center shadow-xs">
+              <Tv className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                  Google AdMob Ads
+                </h3>
+                <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${
+                  !adConfig.enabled
+                    ? 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-neutral-800 dark:text-slate-400 dark:border-neutral-700'
+                    : adConfig.isTestMode
+                    ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
+                    : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
+                }`}>
+                  {!adConfig.enabled ? 'Disabled' : adConfig.isTestMode ? 'Test Mode' : 'Live Production'}
+                </span>
+              </div>
+              <p className="text-[10.5px] text-slate-400">
+                Monetization, Banner, Interstitial &amp; Rewarded Ads
+              </p>
+            </div>
+          </div>
+
+          {/* Master Enable Toggle */}
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={adConfig.enabled}
+              onChange={e => updateAdConfig({ enabled: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-neutral-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-neutral-600 peer-checked:bg-amber-600"></div>
+          </label>
+        </div>
+
+        {adConfig.enabled && (
+          <div className="space-y-3 pt-1">
+            {/* Test Mode Toggle Banner */}
+            <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                      AdMob Test Mode
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-200/70 dark:bg-amber-900 text-amber-900 dark:text-amber-100">
+                      Recommended
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-amber-700/90 dark:text-amber-400 mt-0.5">
+                    Uses Google official test Ad Unit IDs to prevent policy strikes or account ban.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={adConfig.isTestMode}
+                  onChange={e => {
+                    updateAdConfig({ isTestMode: e.target.checked });
+                    notify(
+                      e.target.checked
+                        ? 'AdMob Test Mode enabled (Official Google Test Units)'
+                        : 'Live Production Mode enabled (Using your custom Ad Unit IDs)',
+                      e.target.checked ? 'info' : 'info'
+                    );
+                  }}
+                  className="w-4 h-4 rounded text-amber-600 accent-amber-600 cursor-pointer"
+                />
+              </div>
+
+              {!adConfig.isTestMode && (
+                <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-[10px] text-rose-700 dark:text-rose-300">
+                  ⚠️ <strong>Warning:</strong> Never click on your own live production ads. Google AdMob may suspend accounts for invalid traffic clicks.
+                </div>
+              )}
+            </div>
+
+            {/* Quick Interactive Ad Tests */}
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                Preview &amp; Test Ad Experiences
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={showInterstitialAd}
+                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-850 border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <Tv className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Test Interstitial Ad</span>
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => showRewardedAd('Custom Statement Export')}
+                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-850 border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Test Rewarded Ad</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Interstitial Frequency Selection */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 border border-slate-200/70 dark:border-neutral-800">
+              <div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 block">
+                  Interstitial Ad Frequency
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Show full-screen ad on transaction saves
+                </span>
+              </div>
+              <select
+                value={adConfig.interstitialFrequency}
+                onChange={e => updateAdConfig({ interstitialFrequency: Number(e.target.value) })}
+                className="px-2.5 py-1 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-neutral-800 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+              >
+                <option value={1}>Every action (1)</option>
+                <option value={2}>Every 2 actions</option>
+                <option value={3}>Every 3 actions (Default)</option>
+                <option value={5}>Every 5 actions</option>
+              </select>
+            </div>
+
+            {/* Toggle Ad Unit IDs Configuration */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setIsAdMobExpanded(!isAdMobExpanded)}
+                className="w-full flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline p-1 cursor-pointer"
+              >
+                <span>{isAdMobExpanded ? '▲ Hide Ad Unit IDs Setup' : '▼ Configure Your Custom AdMob Ad Unit IDs'}</span>
+                <Sliders className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Active Linked Credentials Card */}
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-neutral-900 dark:to-neutral-950 border border-blue-200/80 dark:border-blue-900/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center space-x-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Linked AdMob Account</span>
+                  </span>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    Active &amp; Ready
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-1 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-400 font-sans text-[10px]">Publisher ID:</span>
+                    <span className="font-bold text-slate-900 dark:text-white bg-white/70 dark:bg-black/50 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-neutral-800">
+                      {adConfig.publisherId || 'pub-3478133934097048'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-400 font-sans text-[10px]">App ID:</span>
+                    <span className="font-bold text-slate-900 dark:text-white bg-white/70 dark:bg-black/50 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-neutral-800 text-[10px]">
+                      {adConfig.appId || 'ca-app-pub-3478133934097048~9343028119'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-400 font-sans text-[10px]">Ad Unit ID:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 bg-white/70 dark:bg-black/50 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-neutral-800 text-[10px]">
+                      {adConfig.bannerAdUnitId || 'ca-app-pub-3478133934097048/4514915255'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {isAdMobExpanded && (
+                <motion.form
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  onSubmit={handleSaveAdMobIds}
+                  className="space-y-2.5 mt-2 p-3 rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800"
+                >
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      AdMob Publisher ID
+                    </label>
+                    <input
+                      type="text"
+                      value={publisherIdInput}
+                      onChange={e => setPublisherIdInput(e.target.value)}
+                      placeholder="pub-XXXXXXXXXXXXXXXX"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-800 text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-black outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      AdMob App ID
+                    </label>
+                    <input
+                      type="text"
+                      value={appIdInput}
+                      onChange={e => setAppIdInput(e.target.value)}
+                      placeholder="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-800 text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-black outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      Banner Ad Unit ID
+                    </label>
+                    <input
+                      type="text"
+                      value={bannerIdInput}
+                      onChange={e => setBannerIdInput(e.target.value)}
+                      placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-800 text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-black outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      Interstitial Ad Unit ID
+                    </label>
+                    <input
+                      type="text"
+                      value={interstitialIdInput}
+                      onChange={e => setInterstitialIdInput(e.target.value)}
+                      placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-800 text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-black outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                      Rewarded Ad Unit ID
+                    </label>
+                    <input
+                      type="text"
+                      value={rewardedIdInput}
+                      onChange={e => setRewardedIdInput(e.target.value)}
+                      placeholder="ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-800 text-xs font-mono text-slate-800 dark:text-slate-200 bg-white dark:bg-black outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={isSavingAdMob}
+                      className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                    >
+                      {isSavingAdMob ? 'Saving...' : 'Save Ad Unit IDs'}
+                    </button>
+                  </div>
+                </motion.form>
+              )}
+            </div>
+
+            {/* Quick Link to Privacy Policy & AdMob Requirements */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-neutral-800 text-[11px]">
+              <button
+                type="button"
+                onClick={openPrivacyModal}
+                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1 cursor-pointer font-bold"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Privacy Policy &amp; Ad Disclosure</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAdMobGuide(!showAdMobGuide)}
+                className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center space-x-1 cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Checklist</span>
+              </button>
+            </div>
+
+            {/* In-app AdMob Setup Guide Checklist */}
+            {showAdMobGuide && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-2xl bg-blue-50/70 dark:bg-neutral-900 border border-blue-200/80 dark:border-neutral-800 text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300"
+              >
+                <h5 className="font-black text-blue-900 dark:text-blue-300">
+                  AdMob Launch Checklist:
+                </h5>
+                <ol className="list-decimal pl-4 space-y-1 text-[10.5px]">
+                  <li>Sign in to <strong>admob.google.com</strong> with your Gmail ID.</li>
+                  <li>Click <em>Apps &gt; Add App</em>, choose Android, and copy your <strong>App ID</strong>.</li>
+                  <li>Create Ad Units: 1 <strong>Banner</strong>, 1 <strong>Interstitial</strong>, and 1 <strong>Rewarded</strong>.</li>
+                  <li>Paste the IDs above, or keep <strong>Test Mode ON</strong> during development.</li>
+                  <li>Set up <code>app-ads.txt</code> on your website once published to Play Store.</li>
+                </ol>
+              </motion.div>
+            )}
+          </div>
+        )}
       </motion.div>
 
       {/* 5. About App & Logout */}

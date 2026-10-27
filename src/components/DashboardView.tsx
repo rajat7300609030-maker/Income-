@@ -37,6 +37,7 @@ import { formatINR } from '../services/calculations';
 import { AnimatedCounter } from './AnimatedCounter';
 import { TransactionDetailModal } from './TransactionDetailModal';
 import { TransactionCard } from './TransactionCard';
+import { AdMobBanner } from './AdMobBanner';
 import { Transaction, PAYMENT_METHOD_CONFIGS } from '../types';
 
 // Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
@@ -619,6 +620,9 @@ export const DashboardView: React.FC = () => {
           </motion.button>
         </div>
       </motion.div>
+
+      {/* Google AdMob Sponsored Banner Placement */}
+      <AdMobBanner placement="dashboard" />
 
       {/* 3. Summary Cards Grid: Total Income, Total Expenses, Total Payments, Pending Payments */}
       <div>

@@ -21,6 +21,7 @@ import { Transaction, TransactionType, PaymentMethod, PAYMENT_METHODS, PAYMENT_M
 import { formatINR } from '../services/calculations';
 import { TransactionDetailModal } from './TransactionDetailModal';
 import { TransactionCard } from './TransactionCard';
+import { AdMobBanner } from './AdMobBanner';
 
 // Clean payment note and category to remove (recv), (received), and 'received for person' artifacts
 const cleanPaymentNote = (note?: string): string => {
@@ -618,6 +619,7 @@ export const TransactionHistoryView: React.FC = () => {
 
       {/* High-Performance Transaction List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+        <AdMobBanner placement="history" className="mb-2" />
         {filteredTransactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No matching transactions</p>

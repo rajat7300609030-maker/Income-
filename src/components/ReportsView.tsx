@@ -35,6 +35,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { formatINR, calculatePersonSummary } from '../services/calculations';
 import { Person, PersonType } from '../types';
+import { AdMobBanner } from './AdMobBanner';
 
 export const ReportsView: React.FC = () => {
   const {
@@ -696,6 +697,9 @@ export const ReportsView: React.FC = () => {
 
       {/* Scrollable Report Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Google AdMob Sponsored Banner Placement */}
+        <AdMobBanner placement="reports" />
+
         {/* Core Financial Metrics: Total Income, Total Expense, Net Balance, Total Payments */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
           {/* Total Income */}

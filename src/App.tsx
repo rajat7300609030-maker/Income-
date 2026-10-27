@@ -23,9 +23,23 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 import { NotificationModal } from './components/NotificationModal';
 import { PersonDeleteBlockedModal } from './components/PersonDeleteBlockedModal';
 import { ToastContainer } from './components/ToastContainer';
+import { AdMobInterstitialModal } from './components/AdMobInterstitialModal';
+import { AdMobRewardedModal } from './components/AdMobRewardedModal';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 
 const MainAppContent: React.FC = () => {
-  const { user, isBiometricLocked, currentView } = useApp();
+  const {
+    user,
+    isBiometricLocked,
+    currentView,
+    isInterstitialOpen,
+    closeInterstitial,
+    isRewardedOpen,
+    closeRewarded,
+    rewardedTitle,
+    isPrivacyModalOpen,
+    closePrivacyModal,
+  } = useApp();
 
   return (
     <AndroidFrame>
@@ -68,6 +82,22 @@ const MainAppContent: React.FC = () => {
           <ConfirmDialog />
           <NotificationModal />
           <PersonDeleteBlockedModal />
+
+          {/* Google AdMob Modals & Compliance */}
+          <AdMobInterstitialModal
+            isOpen={isInterstitialOpen}
+            onClose={closeInterstitial}
+          />
+          <AdMobRewardedModal
+            isOpen={isRewardedOpen}
+            onClose={closeRewarded}
+            onRewardEarned={closeRewarded}
+            rewardTitle={rewardedTitle}
+          />
+          <PrivacyPolicyModal
+            isOpen={isPrivacyModalOpen}
+            onClose={closePrivacyModal}
+          />
         </div>
       )}
 
